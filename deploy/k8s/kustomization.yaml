@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: trozbot
+resources:
+  - namespace.yaml
+  - secret-example.yaml
+  - orchestrator.yaml
+  - web.yaml
+  - voice-gateway.yaml
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: trozbot
+    includeSelectors: false
