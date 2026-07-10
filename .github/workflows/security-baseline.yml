@@ -1,0 +1,26 @@
+# TROZBOT supply-chain baseline (Wave 0 stub).
+# Expand to real image build, Trivy/Grype, SBOM, cosign, and admission wiring in Wave 5.
+name: security-baseline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  secrets-and-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Placeholder — secrets scan
+        run: |
+          echo "TODO: gitleaks / trufflehog on tree"
+          echo "TODO: dependency scan (pnpm audit / osv-scanner)"
+          echo "TODO: Dockerfile lint when Dockerfiles exist"
+          echo "TODO: image scan + SBOM + cosign sign on release path"
+          echo "Baseline workflow is intentionally non-blocking until Wave 5."
