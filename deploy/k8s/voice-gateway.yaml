@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: voice-gateway
+  namespace: trozbot
+  labels:
+    app: voice-gateway
+    app.kubernetes.io/part-of: trozbot
+    app.kubernetes.io/component: voice-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: voice-gateway
+  template:
+    metadata:
+      labels:
+        app: voice-gateway
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: voice-gateway
+          image: ghcr.io/megaphoenix92/trozbot-voice-gateway:wave3
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8790
+          env:
+            - name: PORT
+              value: "8790"
+            - name: ORCHESTRATOR_URL
+              value: "http://orchestrator:8787"
+            # Do not set STT_API_KEY/TTS_API_KEY/TROZBOT_LIVE_MEDIA until vendor adapter ships
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: voice-gateway
+  namespace: trozbot
+  labels:
+    app: voice-gateway
+spec:
+  selector:
+    app: voice-gateway
+  ports:
+    - name: http
+      port: 8790
+      targetPort: http

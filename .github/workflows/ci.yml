@@ -38,3 +38,8 @@ jobs:
 
       - name: Migration dry-run
         run: pnpm --filter @trozbot/orchestrator migrate:dry-run
+
+      - name: K8s client dry-run
+        run: |
+          # Structural validate manifests (no live cluster required)
+          node deploy/k8s/validate.test.mjs
