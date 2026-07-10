@@ -36,4 +36,16 @@ describe("FixtureKbRetriever hit/miss", () => {
     expect(out.sources).toEqual([]);
     expect(out.answer.toLowerCase()).toMatch(/did not find|no matching/);
   });
+
+  it("grounds the tracked /goal operating loop fixture", () => {
+    const out = new FixtureKbRetriever().retrieve({
+      query: "how does the goal agent build loop work",
+    });
+    expect(out.hit).toBe(true);
+    expect(out.grounded).toBe(true);
+    expect(out.sources[0]!.id).toBe("kb-goal-loop");
+    expect(out.answer.toLowerCase()).toMatch(/objective|acceptance/);
+    expect(out.answer.toLowerCase()).toMatch(/builder gets zero review votes/);
+    expect(out.answer.toLowerCase()).toMatch(/stop/);
+  });
 });
