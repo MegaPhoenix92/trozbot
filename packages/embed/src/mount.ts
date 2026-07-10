@@ -1,6 +1,7 @@
 import {
   AvatarStateSchema,
   type AvatarState,
+  type KbRetrieveOutput,
   type Session,
 } from "@trozbot/core";
 import { EmbedOrchestratorClient } from "./client.js";
@@ -19,7 +20,7 @@ export interface TrozbotHandle {
   getSession(): Session | null;
   /** Programmatic Phase 1 flow helpers (also used by fixture). */
   startSession(): Promise<Session>;
-  kbRetrieve(query: string): Promise<{ answer: string; grounded: true }>;
+  kbRetrieve(query: string): Promise<KbRetrieveOutput>;
   createTicket(
     subject: string,
     body: string,
@@ -168,9 +169,7 @@ export function mountTrozbot(
     }
   }
 
-  async function kbRetrieve(
-    query: string,
-  ): Promise<{ answer: string; grounded: true }> {
+  async function kbRetrieve(query: string): Promise<KbRetrieveOutput> {
     if (destroyed) throw new Error("embed destroyed");
     if (!session) throw new Error("Start a session first");
     setError(null);
@@ -182,7 +181,7 @@ export function mountTrozbot(
       setAvatarState("speaking");
       answerEl.textContent = result.answer;
       setAvatarState("idle");
-      return { answer: result.answer, grounded: true };
+      return result;
     } catch (e) {
       if (!destroyed) setAvatarState("idle");
       const msg = e instanceof Error ? e.message : String(e);
@@ -278,14 +277,13 @@ export function mountTrozbot(
  * Prefer same-origin mount; iframe parents must pass allowlist origins.
  */
 export function buildIframePostMessageContract(): {
-  childToParent: string[];
-  parentToChild: string[];
+  inboundType: "trozbot:setAvatarState";
+  emittedEvents: readonly [];
   note: string;
 } {
   return {
-    parentToChild: ["trozbot:setAvatarState"],
-    /** Planned — not emitted by mount yet; parents should use callbacks. */
-    childToParent: [],
-    note: "Default origin allowlist is loopback only; set allowedOrigins for production host origins. Never use *. Prefer DOM mount + callbacks; child→parent postMessage events are not emitted in Phase 1.",
+    inboundType: "trozbot:setAvatarState",
+    emittedEvents: [],
+    note: "Phase 1 embed emits callbacks directly; no child-to-parent postMessage events are emitted. Parent-to-child messages require an exact origin allowlist.",
   };
 }
