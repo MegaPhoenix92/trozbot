@@ -103,7 +103,8 @@ docs/               blueprint, ADRs, lanes
 **Wave 1** — orchestrator + core contracts + migrations (shipped).  
 **Wave 2** — robot UI (`apps/web`) avatar states + session wire (text path).  
 **Wave 3** — voice gateway stub STT/TTS + session tools (keys optional; interim stub documented).  
-Wave 4+ — thin K8s / supply chain (separate issues).
+**Wave 4** — thin K8s manifests (`deploy/k8s`, client kustomize validate).  
+**Wave 5** — supply chain CI (gitleaks, audit, hadolint, SBOM, trivy); cosign/registry owner-gated — see [`docs/SUPPLY_CHAIN.md`](./docs/SUPPLY_CHAIN.md).
 
 ## Related
 
