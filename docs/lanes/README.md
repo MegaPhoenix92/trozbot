@@ -13,4 +13,6 @@ Acceptance: health endpoint + create_ticket stub + tests
 Reviewers: claude + hermes
 ```
 
-Empty lanes dir means single-threaded work (preferred until Wave 1 lands).
+Empty lanes dir means single-threaded work (preferred for one vertical slice at a time).
+
+See also: [`docs/GOAL_LOOP.md`](../GOAL_LOOP.md), [`docs/PHASE1_STATUS.md`](../PHASE1_STATUS.md).

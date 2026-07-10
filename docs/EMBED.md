@@ -1,6 +1,6 @@
 # TROZBOT embed — host apps (TROZLANIO path)
 
-Mount the Phase 1 **robot concierge** inside a parent application without rewriting TROZLANCOM `GlobalTrozBot`.
+Mount the Phase 1 **robot concierge** inside a parent application without rewriting TROZLANIO `GlobalTrozBot`.
 
 | Piece | Location |
 |-------|----------|
@@ -13,7 +13,7 @@ Mount the Phase 1 **robot concierge** inside a parent application without rewrit
 
 Hosts need a **small import** with testable config + origin allowlist, independent of the full static demo app. `apps/web` stays the standalone robot page; embed is the integration surface for TROZLANIO (or any host).
 
-## Quick start (local)
+## Quick start (local fixture)
 
 ```bash
 # Terminal A — orchestrator
@@ -24,38 +24,97 @@ pnpm dev:embed          # :8791
 # open http://127.0.0.1:8791/
 ```
 
-Fixture uses same-origin `/api` → orchestrator proxy (no browser CORS).
+Fixture uses same-origin `/api` → orchestrator proxy (no browser CORS).  
+Fixture is **not** production host auth.
 
-## Host snippet
+## TROZLANIO host (shipped in sibling monorepo)
+
+**Live implementation exists** in MegaPhoenix92/trozlanio (not a “future gateway sketch”).
+
+| Piece | Location (TROZLANIO) |
+|-------|----------------------|
+| Page | `/dashboard/trozbot/robot-concierge` |
+| React shell | `client/src/components/chat/TrozbotRobotConcierge.tsx` |
+| **Active** proxy registration | **`server/routes.ts`** → `app.use("/api/trozbot", …)` |
+| Not active alone | `server/routes/index.ts` (modular helper; **not** bootstrap) |
+| Vendored browser ESM | `client/public/trozbot-embed/trozbot-embed.browser.js` |
+| Sync | `scripts/sync-trozbot-embed.sh` (sibling `../trozbot`) |
+
+### Access control (host)
+
+```text
+isAuthenticated → requireTrozbotAccess → handler
+```
+
+Same TROZBOT rollout policy as `/api/chat` (`TROZBOT_ALPHA` / `BETA` / `GA`).  
+Denied (401/403): **no interactive embed mount** (status message only).  
+Orchestrator unset/disabled: page may show disabled status; **no** “ready” interactive mount.
+
+### Forwarded Phase 1 paths only
+
+| Method | Path | Notes |
+|--------|------|--------|
+| GET | `/status` | **Local** host status — **not** forwarded upstream |
+| GET | `/health` | Forwarded |
+| POST | `/sessions` | Forwarded |
+| POST | `/sessions/<uuid>/tools` | Forwarded |
+
+Not a general reverse proxy. Query strings rejected. Path traversal / encoded separators rejected. Upstream redirects refused (`redirect: manual`). Bounded timeout.
+
+### Upstream env
+
+| Env | Rule |
+|-----|------|
+| `TROZBOT_ORCHESTRATOR_URL` | Environment-only; **origin-root** only (e.g. `http://127.0.0.1:8787`) |
+| Remote host | Requires explicit `TROZBOT_ORCHESTRATOR_ALLOW_REMOTE=true` |
+
+### Trusted ticket attribution
+
+On `create_ticket` through the host proxy:
+
+- Caller-supplied `tenantId` / `userId` / forged `sessionId` are **stripped**
+- Host injects authenticated TROZLANIO tenant + user (canonical tenant helper)
+- Fail closed if identity cannot be resolved  
+- Browser cannot choose another tenant’s attribution  
+
+### Local host smoke
+
+```bash
+# trozbot
+pnpm dev:orchestrator   # :8787
+
+# trozlanio
+export TROZBOT_ORCHESTRATOR_URL=http://127.0.0.1:8787
+# start platform app; open /dashboard/trozbot/robot-concierge while logged in with rollout access
+```
+
+### GlobalTrozBot
+
+**Unchanged.** Legacy GlobalTrozBot remains a separate surface. This path does not replace it.
+
+### Open follow-up
+
+- TROZLANIO **#3486** — P2 host/embed error-code compatibility (until closed).
+
+Evidence level: **HOST-INTEGRATION PROVEN** in sibling (PRs #3479, #3480, #3483, #3485). See [`PHASE1_STATUS.md`](./PHASE1_STATUS.md).
+
+---
+
+## Host snippet (generic package API)
 
 ```html
 <div id="trozbot-slot"></div>
 <script type="module">
   import { mountTrozbot } from "@trozbot/embed";
-  // or serve packages/embed/dist from your static CDN / reverse proxy
 
   const handle = mountTrozbot(document.getElementById("trozbot-slot"), {
-    // Production: same-origin proxy path (recommended)
-    apiProxyPath: "/api/trozbot", // your host rewrites this to orchestrator
-
-    // Local only alternative (loopback):
-    // orchestratorBaseUrl: "http://127.0.0.1:8787",
-
-    theme: "dark", // or "default"
+    apiProxyPath: "/api/trozbot", // host same-origin proxy
+    theme: "dark",
     correlationId: "trozlanio-shell",
-
-    // postMessage parents (never "*")
-    allowedOrigins: ["https://app.trozlan.io"],
-
-    onTicketCreated: ({ ticketId, subject }) => {
-      /* host analytics / toast */
-    },
+    allowedOrigins: [window.location.origin], // never "*"
+    onTicketCreated: ({ ticketId, subject }) => {},
     onError: ({ message }) => console.error(message),
-    onAvatarState: (state) => { /* idle|listening|thinking|speaking */ },
   });
-
-  // later
-  // handle.destroy();
 </script>
 ```
 
@@ -66,62 +125,35 @@ Fixture uses same-origin `/api` → orchestrator proxy (no browser CORS).
   window.__TROZBOT__ = {
     apiProxyPath: "/api/trozbot",
     theme: "default",
-    allowedOrigins: ["https://app.trozlan.io"],
+    allowedOrigins: [window.location.origin],
   };
 </script>
 ```
-
-Merged under explicit `mountTrozbot` options (options win).
 
 ## Config fields
 
 | Field | Purpose |
 |-------|---------|
-| `apiProxyPath` | Same-origin prefix; host proxies to orchestrator (**preferred**) |
+| `apiProxyPath` | Same-origin prefix (**preferred**) |
 | `orchestratorBaseUrl` | Direct URL; **loopback only** unless `ALLOW_PUBLIC_ORCHESTRATOR=true` |
 | `theme` | `default` \| `dark` |
-| `allowedOrigins` | Exact parent origins for `postMessage` (no wildcards) |
-| `correlationId` | Opaque session correlation string |
-| `isRobot` | Always `true` — non-human branding enforced |
-| `fetchImpl` | Test injection |
-
-Resolved branding: `identityLabel: "TROZBOT robot concierge"`, avatar states `idle|listening|thinking|speaking`.
+| `allowedOrigins` | Exact parent origins (no wildcards) |
+| `correlationId` | Opaque session correlation |
+| `isRobot` | Always `true` |
 
 ## Origin / messaging safety
 
-- **Default deny-wide-open:** only `http(s)://127.0.0.1`, `localhost`, `[::1]` (any port) unless `allowedOrigins` lists exact production hosts.
-- Wildcards (`*`) and empty origins are **rejected** at config time.
-- Optional parent→child message: `{ type: "trozbot:setAvatarState", state: "thinking" }` — ignored if `event.origin` fails allowlist.
-- Prefer **direct DOM mount** + callbacks (`onTicketCreated`, `onError`). Iframe is optional; `buildIframePostMessageContract()` documents parent→child only in Phase 1 (no child→parent events emitted yet). If iframe: host origin must be on allowlist; never `*`.
-- `apiProxyPath` must be a **path** (`/api/...`), never an absolute URL.
-
-## Host reverse-proxy (TROZLANIO)
-
-Example shape (not a monorepo PR — implement in your gateway):
-
-```
-Browser  →  https://app.trozlan.io/api/trozbot/*  →  trozbot-orchestrator:8787/*
-Browser  →  static embed bundle from your CDN or /assets/trozbot-embed/
-```
-
-- Keep cookies / session on the **host** origin.
-- **Production auth:** put the page that mounts TROZBOT behind existing TROZLANIO auth. The embed **does not** implement SSO/OAuth.
-- Do not expose orchestrator with wide-open CORS to the public internet.
-
-## CORS notes
-
-| Mode | CORS |
-|------|------|
-| `apiProxyPath` same-origin | None required |
-| Direct `orchestratorBaseUrl` | Orchestrator must allow the host origin (not configured for wildcards in Phase 1) |
+- Default allowlist: loopback origins unless `allowedOrigins` lists exact hosts  
+- Wildcards (`*`) rejected  
+- Prefer DOM mount + callbacks  
 
 ## Security checklist
 
-- [ ] Loopback-only local demo binds (see Phase 1 hardening)
-- [ ] No secrets in `window.__TROZBOT__` or embed options
-- [ ] Tool allowlist unchanged on orchestrator
-- [ ] Production host supplies auth + TLS
-- [ ] `allowedOrigins` lists real app origins only
+- [ ] Loopback-only local demo binds  
+- [ ] No secrets in `window.__TROZBOT__`  
+- [ ] Tool allowlist unchanged on orchestrator  
+- [ ] Host supplies auth + rollout + TLS in production  
+- [ ] `allowedOrigins` lists real app origins only  
 
 ## Programmatic handle
 
@@ -133,33 +165,9 @@ handle.setAvatarState("speaking");
 handle.destroy();
 ```
 
-## TROZLANIO host mount (sibling monorepo)
-
-When product is ready, the **host** lives in MegaPhoenix92/trozlanio (not this package):
-
-| Piece | Location (TROZLANIO) |
-|-------|----------------------|
-| Page | `/dashboard/trozbot/robot-concierge` |
-| React shell | `client/src/components/chat/TrozbotRobotConcierge.tsx` |
-| Same-origin proxy | `/api/trozbot/*` → `TROZBOT_ORCHESTRATOR_URL` (auth required) |
-| Vendored browser ESM | `client/public/trozbot-embed/trozbot-embed.browser.js` |
-| Sync | `scripts/sync-trozbot-embed.sh` (expects sibling `../trozbot`) |
-
-Local host smoke:
-
-```bash
-# trozbot
-pnpm dev:orchestrator   # :8787
-
-# trozlanio
-export TROZBOT_ORCHESTRATOR_URL=http://127.0.0.1:8787
-# start app as usual, open /dashboard/trozbot/robot-concierge (authenticated)
-```
-
-**Do not rewrite** legacy `GlobalTrozBot` as part of embed adoption unless product explicitly migrates.
-
 ## Related
 
-- Local three-service demo: `docs/DEMO.md`
-- Blueprint: `docs/PHASE1_BLUEPRINT.md`
-- DO NOTs: `docs/DO_NOT.md`
+- Local three-service demo: `docs/DEMO.md`  
+- Evidence ledger: `docs/PHASE1_STATUS.md`  
+- Blueprint: `docs/PHASE1_BLUEPRINT.md`  
+- DO NOTs: `docs/DO_NOT.md`  
