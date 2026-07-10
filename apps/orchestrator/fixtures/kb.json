@@ -1,0 +1,20 @@
+[
+  {
+    "id": "kb-restart-agent",
+    "title": "Restart the agent service",
+    "body": "After changing agent configuration, restart the agent service so the new settings load. Use the service control panel or run the restart action from the admin tools menu. A restart does not delete session history.",
+    "tags": ["restart", "agent", "config", "configuration", "service"]
+  },
+  {
+    "id": "kb-create-ticket",
+    "title": "When to create a support ticket",
+    "body": "Create a support ticket when the knowledge base does not resolve the issue, or when you need a human operator to follow up. Include a clear subject and a short description of steps already tried.",
+    "tags": ["ticket", "support", "help", "escalation"]
+  },
+  {
+    "id": "kb-robot-identity",
+    "title": "TROZBOT is a robot concierge",
+    "body": "TROZBOT is a clearly non-human robot support concierge. It answers from the knowledge base and can create tickets. It does not pretend to be a human support representative.",
+    "tags": ["robot", "identity", "trozbot", "who"]
+  }
+]
