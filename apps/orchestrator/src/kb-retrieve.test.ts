@@ -43,7 +43,7 @@ describe("FixtureKbRetriever hit/miss", () => {
     });
     expect(out.hit).toBe(true);
     expect(out.grounded).toBe(true);
-    expect(out.sources[0]!.id).toBe("kb-goal-loop");
+    expect(out.sources[0]?.id).toBe("kb-goal-loop");
     expect(out.answer.toLowerCase()).toMatch(/objective|acceptance/);
     expect(out.answer.toLowerCase()).toMatch(/builder gets zero review votes/);
     expect(out.answer.toLowerCase()).toMatch(/stop/);
