@@ -121,7 +121,8 @@ docs/               blueprint, DEMO, EMBED, ADRs
 **Wave 5** — supply chain CI (gitleaks, audit, hadolint, SBOM, trivy); cosign/registry owner-gated — see [`docs/SUPPLY_CHAIN.md`](./docs/SUPPLY_CHAIN.md).  
 
 **Hardening** — loopback bind guard (`ALLOW_PUBLIC_BIND`); DB-optional tickets/audit (`DATABASE_URL`); honest KB miss; UI empty/error/no-hit polish. Local demo stays unauthenticated.  
-**Embed** — `@trozbot/embed` mount/destroy + origin allowlist + local fixture host (`docs/EMBED.md`).
+**Embed** — `@trozbot/embed` mount/destroy + origin allowlist + local fixture host (`docs/EMBED.md`).  
+**TROZLANIO host** — optional page + `/api/trozbot` proxy in the platform monorepo (does not replace GlobalTrozBot); see `docs/EMBED.md` → TROZLANIO host mount.
 
 ## Related
 
