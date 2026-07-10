@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+.venv/
+__pycache__/
+*.egg-info/
+
+# Build / cache
+dist/
+build/
+coverage/
+.coverage
+*.tsbuildinfo
+.turbo/
+.next/
+.cache/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Agent / local state
+.agent-state/
+.pnpm-debug.log*
+npm-debug.log*
+yarn-error.log*
