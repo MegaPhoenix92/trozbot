@@ -13,7 +13,7 @@
 
 > Robot pops up → user speaks → KB-grounded answer → create ticket if needed → one session → thin K8s + security baseline.
 
-## Wave 1 — local vertical slice (run this)
+## Local development (Waves 1–2)
 
 Requires **Node ≥ 20** and **pnpm** (9.x).
 
@@ -21,7 +21,7 @@ Requires **Node ≥ 20** and **pnpm** (9.x).
 # Install workspace
 pnpm install
 
-# Build + typecheck + unit tests (core contracts + orchestrator flow)
+# Build + typecheck + unit tests
 pnpm build
 pnpm typecheck
 pnpm test
@@ -29,9 +29,13 @@ pnpm test
 # Migration dry-run (no DATABASE_URL required)
 pnpm --filter @trozbot/orchestrator migrate:dry-run
 
-# Run orchestrator
+# Terminal A — orchestrator
 pnpm dev:orchestrator
 # Health: curl -s http://127.0.0.1:8787/health
+
+# Terminal B — robot UI (Wave 2)
+pnpm dev:web
+# → http://127.0.0.1:5173  (clearly non-human robot avatar + session wire)
 ```
 
 ### Manual smoke (optional)
@@ -92,9 +96,9 @@ docs/               blueprint, ADRs, lanes
 
 ## Status
 
-**Wave 1 — local orchestrator slice:** `packages/core` contracts + `apps/orchestrator` (`/health`, session, tool policy, fixture KB, tickets) + expand-only `trozbot` migrations + root pnpm workspace.
-
-Wave 2+ (voice UI / real STT-TTS / full GKE) is **out of scope** until a fresh owner check-in.
+**Wave 1** — orchestrator + core contracts + migrations (shipped).  
+**Wave 2** — robot UI (`apps/web`) avatar states + session wire (text path).  
+Wave 3+ — voice gateway / K8s / supply chain (separate issues).
 
 ## Related
 

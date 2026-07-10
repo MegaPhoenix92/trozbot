@@ -49,6 +49,13 @@ async function readJson(req: http.IncomingMessage): Promise<unknown> {
   }
 }
 
+/** Local browser UI (Wave 2) may call orchestrator cross-origin. */
+const CORS_HEADERS: Record<string, string> = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, OPTIONS",
+  "access-control-allow-headers": "content-type",
+};
+
 function sendJson(
   res: http.ServerResponse,
   status: number,
@@ -58,21 +65,29 @@ function sendJson(
   res.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
     "content-length": Buffer.byteLength(payload),
+    ...CORS_HEADERS,
   });
   res.end(payload);
 }
 
 /**
- * Minimal HTTP surface for Wave 1:
+ * Minimal HTTP surface:
  *   GET  /health
  *   POST /sessions
  *   POST /sessions/:id/tools
+ *   OPTIONS * (CORS preflight for Wave 2 web UI)
  */
 export function createServer(orchestrator: Orchestrator): http.Server {
   return http.createServer(async (req, res) => {
     try {
       const method = req.method ?? "GET";
       const url = new URL(req.url ?? "/", "http://localhost");
+
+      if (method === "OPTIONS") {
+        res.writeHead(204, CORS_HEADERS);
+        res.end();
+        return;
+      }
 
       if (method === "GET" && url.pathname === "/health") {
         sendJson(res, 200, healthBody());

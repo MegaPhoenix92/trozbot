@@ -12,7 +12,9 @@
     "test": "pnpm -r run test",
     "typecheck": "pnpm -r run typecheck",
     "dev:orchestrator": "pnpm --filter @trozbot/orchestrator dev",
-    "start:orchestrator": "pnpm --filter @trozbot/orchestrator start"
+    "start:orchestrator": "pnpm --filter @trozbot/orchestrator start",
+    "dev:web": "pnpm --filter @trozbot/web dev",
+    "start:web": "pnpm --filter @trozbot/web start"
   },
   "devDependencies": {
     "typescript": "^5.7.3"

@@ -1,0 +1,255 @@
+:root {
+  --bg: #0b1220;
+  --panel: #141c2e;
+  --text: #e8eefc;
+  --muted: #9aabc9;
+  --accent: #3dd6c6;
+  --robot: #5b8cff;
+  --warn: #ff7b72;
+  --idle: #5b8cff;
+  --listening: #f0c14b;
+  --thinking: #b388ff;
+  --speaking: #3dd6c6;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #1a2744, var(--bg));
+  color: var(--text);
+}
+
+.shell {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.header h1 {
+  margin: 0.25rem 0;
+  font-size: 1.75rem;
+}
+
+.sub {
+  color: var(--muted);
+  margin: 0.5rem 0 1.5rem;
+}
+
+.badge {
+  display: inline-block;
+  margin: 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(61, 214, 198, 0.15);
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.robot-panel {
+  background: var(--panel);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  gap: 0.75rem;
+}
+
+.robot-face {
+  width: 120px;
+  height: 120px;
+  border-radius: 28px;
+  background: linear-gradient(145deg, #243456, #1a2438);
+  border: 3px solid var(--idle);
+  position: relative;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 0 0 0 transparent;
+}
+
+/* Geometric robot — not a human face */
+.robot-face .eye {
+  position: absolute;
+  top: 38px;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--idle);
+}
+
+.robot-face .eye.left {
+  left: 28px;
+}
+
+.robot-face .eye.right {
+  right: 28px;
+}
+
+.robot-face .mouth {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  width: 36px;
+  height: 8px;
+  margin-left: -18px;
+  border-radius: 2px;
+  background: var(--idle);
+}
+
+.state-idle .robot-face {
+  border-color: var(--idle);
+}
+.state-idle .robot-face .eye,
+.state-idle .robot-face .mouth {
+  background: var(--idle);
+}
+
+.state-listening .robot-face {
+  border-color: var(--listening);
+  box-shadow: 0 0 24px rgba(240, 193, 75, 0.35);
+}
+.state-listening .robot-face .eye,
+.state-listening .robot-face .mouth {
+  background: var(--listening);
+}
+
+.state-thinking .robot-face {
+  border-color: var(--thinking);
+  box-shadow: 0 0 24px rgba(179, 136, 255, 0.35);
+}
+.state-thinking .robot-face .eye,
+.state-thinking .robot-face .mouth {
+  background: var(--thinking);
+}
+.state-thinking .robot-face {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.state-speaking .robot-face {
+  border-color: var(--speaking);
+  box-shadow: 0 0 24px rgba(61, 214, 198, 0.35);
+}
+.state-speaking .robot-face .eye,
+.state-speaking .robot-face .mouth {
+  background: var(--speaking);
+}
+.state-speaking .robot-face .mouth {
+  animation: speak 0.4s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  50% {
+    transform: scale(0.97);
+  }
+}
+
+@keyframes speak {
+  from {
+    height: 6px;
+  }
+  to {
+    height: 14px;
+  }
+}
+
+.state-label {
+  margin: 0;
+  color: var(--muted);
+}
+
+.session-line {
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.session-line code {
+  color: var(--text);
+}
+
+.controls {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+input,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #0e1628;
+  color: var(--text);
+}
+
+button {
+  padding: 0.7rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #1c2944;
+  color: var(--text);
+  cursor: pointer;
+}
+
+button.primary {
+  background: var(--robot);
+  border-color: transparent;
+  font-weight: 600;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.output {
+  background: var(--panel);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.output h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+pre {
+  white-space: pre-wrap;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.error {
+  color: var(--warn);
+  margin: 0.75rem 0 0;
+}
