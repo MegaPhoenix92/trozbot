@@ -12,8 +12,9 @@
         <p class="badge" id="identity">TROZBOT robot concierge</p>
         <h1>Support robot</h1>
         <p class="sub">
-          Clearly non-human. Answers from the knowledge base and can create
-          tickets. Text path for Wave 2 (voice in Wave 3).
+          Clearly <strong>non-human</strong>. Answers from the knowledge base and can
+          create tickets. Local demo is <strong>unauthenticated / loopback only</strong>
+          (127.0.0.1).
         </p>
       </header>
 
@@ -29,6 +30,7 @@
         <p class="session-line">
           Session: <code id="sessionId">none</code>
         </p>
+        <p id="status" class="status" hidden></p>
       </section>
 
       <section class="controls">
@@ -40,21 +42,33 @@
         <button type="button" id="btnAsk" disabled>Get KB answer</button>
         <label class="field">
           <span>Ticket subject</span>
-          <input id="ticketSubject" type="text" placeholder="Optional: create ticket if KB is not enough" />
+          <input id="ticketSubject" type="text" placeholder="Required for ticket" />
         </label>
         <label class="field">
           <span>Ticket body</span>
-          <textarea id="ticketBody" rows="2" placeholder="Describe the issue and steps tried"></textarea>
+          <textarea id="ticketBody" rows="2" placeholder="Describe the issue and steps already tried"></textarea>
         </label>
         <button type="button" id="btnTicket" disabled>Create ticket</button>
       </section>
 
       <section class="output" aria-live="polite">
         <h2>Robot response</h2>
-        <pre id="answer">—</pre>
+        <pre id="answer" class="answer">—</pre>
         <p id="ticketResult" class="muted">—</p>
         <p id="error" class="error" hidden></p>
       </section>
+
+      <footer class="footer">
+        <h2>Voice stub (Terminal C)</h2>
+        <p class="muted">
+          Run <code>pnpm dev:voice</code> then paste this curl (stub STT/TTS — no API keys):
+        </p>
+        <pre id="voiceCurl" class="curl"></pre>
+        <p class="muted">
+          Full walkthrough: <code>docs/DEMO.md</code>. Phase 1 tools only:
+          <code>kb_retrieve</code> + <code>create_ticket</code>.
+        </p>
+      </footer>
     </main>
     <script type="module" src="/app.js"></script>
   </body>

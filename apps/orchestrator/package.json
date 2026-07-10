@@ -10,14 +10,18 @@
     "test": "vitest run",
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
-    "migrate:dry-run": "tsx src/migrate-dry-run.ts"
+    "migrate:dry-run": "tsx src/migrate-dry-run.ts",
+    "migrate:apply": "tsx src/migrate-apply.ts"
   },
+
   "dependencies": {
     "@trozbot/core": "workspace:*",
+    "pg": "^8.13.1",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
+    "@types/pg": "^8.11.10",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"

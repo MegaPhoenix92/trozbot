@@ -150,9 +150,11 @@ export async function listen(
 }
 
 async function main(): Promise<void> {
+  const { resolveBindHost } = await import("@trozbot/core");
   const port = Number(process.env.PORT ?? 5173);
+  const host = resolveBindHost();
   const server = createWebServer();
-  const bound = await listen(server, port);
+  const bound = await listen(server, port, host);
   console.log(
     JSON.stringify({
       msg: "trozbot-web listening",
@@ -160,6 +162,7 @@ async function main(): Promise<void> {
       port: bound.port,
       health: `http://${bound.host}:${bound.port}/health`,
       wave: 2,
+      auth: "none-local-demo",
     }),
   );
 }

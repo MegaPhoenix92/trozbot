@@ -31,12 +31,34 @@ export const KbSourceSchema = z.object({
 
 export type KbSource = z.infer<typeof KbSourceSchema>;
 
-export const KbRetrieveOutputSchema = z.object({
-  answer: z.string().min(1),
-  sources: z.array(KbSourceSchema).min(1),
-  /** True when answer is grounded in fixture/KB sources (Wave 1 always true on hit). */
-  grounded: z.literal(true),
-});
+export const KbRetrieveOutputSchema = z
+  .object({
+    answer: z.string().min(1),
+    /**
+     * Matching KB sources. Empty on miss — never invent topical sources.
+     * Hits must include ≥1 source and grounded=true.
+     */
+    sources: z.array(KbSourceSchema),
+    /** True only when answer is grounded in real matching KB sources (not a miss). */
+    grounded: z.boolean(),
+    /** True when at least one fixture document scored a match. */
+    hit: z.boolean(),
+  })
+  .superRefine((val, ctx) => {
+    if (val.hit) {
+      if (!val.grounded || val.sources.length < 1) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "KB hit requires grounded=true and ≥1 source",
+        });
+      }
+    } else if (val.grounded || val.sources.length > 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "KB miss must not invent sources or claim grounded",
+      });
+    }
+  });
 
 export type KbRetrieveOutput = z.infer<typeof KbRetrieveOutputSchema>;
 

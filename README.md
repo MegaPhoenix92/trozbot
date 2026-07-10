@@ -13,7 +13,11 @@
 
 > Robot pops up → user speaks → KB-grounded answer → create ticket if needed → one session → thin K8s + security baseline.
 
-## Local development (Waves 1–2)
+## Demo (Phase 1 local)
+
+→ **[`docs/DEMO.md`](./docs/DEMO.md)** — three terminals, curl smoke, bind/DB notes.
+
+## Local development
 
 Requires **Node ≥ 20** and **pnpm** (9.x).
 
@@ -104,7 +108,9 @@ docs/               blueprint, ADRs, lanes
 **Wave 2** — robot UI (`apps/web`) avatar states + session wire (text path).  
 **Wave 3** — voice gateway stub STT/TTS + session tools (keys optional; interim stub documented).  
 **Wave 4** — thin K8s manifests (`deploy/k8s`, client kustomize validate).  
-**Wave 5** — supply chain CI (gitleaks, audit, hadolint, SBOM, trivy); cosign/registry owner-gated — see [`docs/SUPPLY_CHAIN.md`](./docs/SUPPLY_CHAIN.md).
+**Wave 5** — supply chain CI (gitleaks, audit, hadolint, SBOM, trivy); cosign/registry owner-gated — see [`docs/SUPPLY_CHAIN.md`](./docs/SUPPLY_CHAIN.md).  
+
+**Hardening** — loopback bind guard (`ALLOW_PUBLIC_BIND`); DB-optional tickets/audit (`DATABASE_URL`); honest KB miss; UI empty/error/no-hit polish. Local demo stays unauthenticated.
 
 ## Related
 

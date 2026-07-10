@@ -253,3 +253,54 @@ pre {
   color: var(--warn);
   margin: 0.75rem 0 0;
 }
+
+.status {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.4rem;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.status-ok {
+  color: var(--speaking);
+}
+
+.status-miss,
+.status-empty {
+  color: var(--listening);
+}
+
+.status-error {
+  color: var(--warn);
+}
+
+.answer-miss {
+  color: var(--muted);
+}
+
+.answer-error {
+  color: var(--warn);
+}
+
+.footer {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background: var(--panel);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.footer h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.curl {
+  font-size: 0.75rem;
+  overflow-x: auto;
+  padding: 0.65rem;
+  background: #0e1628;
+  border-radius: 0.4rem;
+  color: var(--muted);
+}

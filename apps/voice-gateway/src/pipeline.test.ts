@@ -26,9 +26,9 @@ describe("Wave 3 voice pipeline (stub STT/TTS + real orchestrator)", () => {
   });
 
   async function boot() {
-    const orch = createOrchestratorApp();
+    const orch = await createOrchestratorApp({ forceMemory: true });
     orchServer = orch.server;
-    const ob = await orchListen(orchServer, 0);
+    const ob = await orchListen(orchServer, 0, "127.0.0.1");
     orchBase = `http://${ob.host}:${ob.port}`;
 
     const gw = createVoiceGateway({ orchestratorUrl: orchBase });
@@ -109,9 +109,8 @@ describe("Wave 3 voice pipeline (stub STT/TTS + real orchestrator)", () => {
     };
     expect(tBody.ok).toBe(true);
     expect(tBody.result.ticketId).toBeTruthy();
-    expect(orchApp.tickets.get(tBody.result.ticketId!)?.subject).toBe(
-      "Voice-reported agent failure",
-    );
+    const stored = await orchApp.tickets.get(tBody.result.ticketId!);
+    expect(stored?.subject).toBe("Voice-reported agent failure");
 
     // Direct policy check via orchestrator client used by gateway
     const client = new GatewayOrchestratorClient(orchBase);
