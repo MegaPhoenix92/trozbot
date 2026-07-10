@@ -19,9 +19,9 @@ describe("RobotController + OrchestratorClient (real orchestrator)", () => {
   });
 
   async function bootOrch() {
-    const app = createOrchestratorApp();
+    const app = await createOrchestratorApp({ forceMemory: true });
     server = app.server;
-    const bound = await orchListen(server, 0);
+    const bound = await orchListen(server, 0, "127.0.0.1");
     base = `http://${bound.host}:${bound.port}`;
     return app;
   }

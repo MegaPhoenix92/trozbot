@@ -30,7 +30,10 @@ export class Orchestrator {
     return this.deps.sessions.get(id);
   }
 
-  invokeTool(sessionId: string, body: unknown): ToolInvokeResponse {
+  async invokeTool(
+    sessionId: string,
+    body: unknown,
+  ): Promise<ToolInvokeResponse> {
     const session = this.deps.sessions.get(sessionId);
     if (!session) {
       return {
@@ -50,7 +53,7 @@ export class Orchestrator {
       input = req.input;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Invalid tool request";
-      this.deps.audit.record({
+      await this.deps.audit.record({
         sessionId,
         toolName: "unknown",
         input: body,
@@ -66,7 +69,7 @@ export class Orchestrator {
 
     const decision = evaluateToolPolicy(tool);
     if (!decision.allowed) {
-      this.deps.audit.record({
+      await this.deps.audit.record({
         sessionId,
         toolName: decision.tool,
         input,
@@ -95,7 +98,7 @@ export class Orchestrator {
           query: typeof base.query === "string" ? base.query : "",
           sessionId,
         });
-        this.deps.audit.record({
+        await this.deps.audit.record({
           sessionId,
           toolName: "kb_retrieve",
           input,
@@ -106,12 +109,11 @@ export class Orchestrator {
         return { ok: true, tool: "kb_retrieve", result };
       }
 
-      // create_ticket
       const base =
         typeof input === "object" && input !== null
           ? (input as Record<string, unknown>)
           : {};
-      const result = this.deps.tickets.create({
+      const result = await this.deps.tickets.create({
         sessionId,
         subject: typeof base.subject === "string" ? base.subject : "",
         body: typeof base.body === "string" ? base.body : "",
@@ -120,7 +122,7 @@ export class Orchestrator {
           : {}),
         ...(typeof base.userId === "string" ? { userId: base.userId } : {}),
       });
-      this.deps.audit.record({
+      await this.deps.audit.record({
         sessionId,
         toolName: "create_ticket",
         input,
@@ -131,13 +133,11 @@ export class Orchestrator {
       return { ok: true, tool: "create_ticket", result };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Tool failed";
-      // Zod validation → INVALID_INPUT; other failures → TOOL_FAILED
-      // Audit must match the client-facing code (security artifact).
       const code =
         err instanceof Error && err.name === "ZodError"
           ? "INVALID_INPUT"
           : "TOOL_FAILED";
-      this.deps.audit.record({
+      await this.deps.audit.record({
         sessionId,
         toolName: decision.tool,
         input,

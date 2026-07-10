@@ -36,3 +36,9 @@ export {
   type ToolInvokeRequest,
   type ToolInvokeResponse,
 } from "./tools.js";
+
+export {
+  DEFAULT_BIND_HOST,
+  isLoopbackHost,
+  resolveBindHost,
+} from "./bind.js";

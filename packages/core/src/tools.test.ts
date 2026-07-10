@@ -24,7 +24,7 @@ describe("Phase 1 tool allowlist", () => {
 });
 
 describe("kb_retrieve contracts", () => {
-  it("accepts a grounded fixture-shaped output", () => {
+  it("accepts a grounded hit with sources", () => {
     const out = KbRetrieveOutputSchema.parse({
       answer: "Restart the agent service after config changes.",
       sources: [
@@ -35,17 +35,31 @@ describe("kb_retrieve contracts", () => {
         },
       ],
       grounded: true,
+      hit: true,
     });
     expect(out.grounded).toBe(true);
+    expect(out.hit).toBe(true);
     expect(out.sources).toHaveLength(1);
   });
 
-  it("rejects ungrounded or empty sources", () => {
+  it("accepts an honest miss (no sources, not grounded)", () => {
+    const miss = KbRetrieveOutputSchema.parse({
+      answer: "No matching knowledge base article was found.",
+      sources: [],
+      grounded: false,
+      hit: false,
+    });
+    expect(miss.hit).toBe(false);
+    expect(miss.sources).toHaveLength(0);
+  });
+
+  it("rejects inconsistent hit/miss shapes", () => {
     expect(() =>
       KbRetrieveOutputSchema.parse({
         answer: "guess",
         sources: [],
         grounded: true,
+        hit: true,
       }),
     ).toThrow();
     expect(() =>
@@ -53,6 +67,7 @@ describe("kb_retrieve contracts", () => {
         answer: "guess",
         sources: [{ id: "x", title: "t", excerpt: "e" }],
         grounded: false,
+        hit: false,
       }),
     ).toThrow();
   });

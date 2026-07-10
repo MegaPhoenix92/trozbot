@@ -16,5 +16,23 @@
     "title": "TROZBOT is a robot concierge",
     "body": "TROZBOT is a clearly non-human robot support concierge. It answers from the knowledge base and can create tickets. It does not pretend to be a human support representative.",
     "tags": ["robot", "identity", "trozbot", "who"]
+  },
+  {
+    "id": "kb-service-status",
+    "title": "Check service status",
+    "body": "To check whether a TROZLANIO service is healthy, open the status panel or call the service health endpoint (typically GET /health). A response with ok true means the process is up. Status checks are read-only and do not change configuration.",
+    "tags": ["status", "health", "uptime", "check", "monitoring"]
+  },
+  {
+    "id": "kb-ticket-fields",
+    "title": "What to put in a ticket",
+    "body": "A useful ticket has a short subject and a body with: what you expected, what happened, steps already tried, and any error codes. TROZBOT can create the ticket for you via create_ticket after you provide subject and body.",
+    "tags": ["ticket", "subject", "body", "fields", "template"]
+  },
+  {
+    "id": "kb-session-basics",
+    "title": "Support session basics",
+    "body": "Each robot session has an id and avatar states idle, listening, thinking, and speaking. Start a session before asking the knowledge base or creating a ticket. Sessions are local demo state unless wired to durable storage.",
+    "tags": ["session", "avatar", "idle", "listening", "thinking", "speaking"]
   }
 ]

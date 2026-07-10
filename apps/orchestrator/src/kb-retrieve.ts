@@ -37,7 +37,6 @@ function scoreDoc(queryTokens: string[], doc: KbDocument): number {
 
 function loadDefaultFixture(): KbDocument[] {
   const here = dirname(fileURLToPath(import.meta.url));
-  // dist/ → ../fixtures; src/ (tsx) → ../fixtures
   const candidates = [
     join(here, "..", "fixtures", "kb.json"),
     join(here, "..", "..", "fixtures", "kb.json"),
@@ -53,7 +52,7 @@ function loadDefaultFixture(): KbDocument[] {
   throw new Error("KB fixture kb.json not found relative to orchestrator package");
 }
 
-/** File-backed KB retriever for Wave 1 (fixture). */
+/** File-backed KB retriever — hits are grounded; misses invent no sources. */
 export class FixtureKbRetriever implements KbRetriever {
   private readonly docs: KbDocument[];
 
@@ -69,20 +68,24 @@ export class FixtureKbRetriever implements KbRetriever {
       .filter((r) => r.score > 0)
       .sort((a, b) => b.score - a.score);
 
-    const top = ranked[0]?.doc ?? this.docs[0];
+    const top = ranked[0]?.doc;
     if (!top) {
-      throw new Error("KB fixture is empty");
+      return KbRetrieveOutputSchema.parse({
+        answer:
+          "I did not find a matching knowledge base article for that question. " +
+          "Try different words, or create a support ticket so a human operator can follow up. " +
+          "I will not invent sources that are not in the knowledge base.",
+        sources: [],
+        grounded: false,
+        hit: false,
+      });
     }
 
-    // Always ground in a real document (best match or first fixture article).
     const excerpt =
       top.body.length > 240 ? `${top.body.slice(0, 237)}...` : top.body;
-    const answer = ranked[0]
-      ? top.body
-      : `I did not find a strong match. Here is related guidance from "${top.title}": ${top.body}`;
 
     return KbRetrieveOutputSchema.parse({
-      answer,
+      answer: top.body,
       sources: [
         {
           id: top.id,
@@ -91,6 +94,7 @@ export class FixtureKbRetriever implements KbRetriever {
         },
       ],
       grounded: true,
+      hit: true,
     });
   }
 }

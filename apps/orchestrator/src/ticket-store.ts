@@ -18,19 +18,16 @@ export interface StoredTicket {
 }
 
 export interface TicketStore {
-  create(input: CreateTicketInput): CreateTicketOutput;
-  get(id: string): StoredTicket | undefined;
-  listBySession(sessionId: string): StoredTicket[];
+  create(input: CreateTicketInput): Promise<CreateTicketOutput>;
+  get(id: string): Promise<StoredTicket | undefined>;
+  listBySession(sessionId: string): Promise<StoredTicket[]>;
 }
 
-/**
- * In-memory ticket store for Wave 1 when DATABASE_URL is absent.
- * Same create_ticket surface as a future Postgres-backed store (trozbot.tickets).
- */
+/** In-memory ticket store when DATABASE_URL is absent. */
 export class InMemoryTicketStore implements TicketStore {
   private readonly tickets = new Map<string, StoredTicket>();
 
-  create(rawInput: CreateTicketInput): CreateTicketOutput {
+  async create(rawInput: CreateTicketInput): Promise<CreateTicketOutput> {
     const input = CreateTicketInputSchema.parse(rawInput);
     const createdAt = new Date().toISOString();
     const ticket: StoredTicket = {
@@ -54,11 +51,11 @@ export class InMemoryTicketStore implements TicketStore {
     });
   }
 
-  get(id: string): StoredTicket | undefined {
+  async get(id: string): Promise<StoredTicket | undefined> {
     return this.tickets.get(id);
   }
 
-  listBySession(sessionId: string): StoredTicket[] {
+  async listBySession(sessionId: string): Promise<StoredTicket[]> {
     return [...this.tickets.values()].filter((t) => t.sessionId === sessionId);
   }
 }
@@ -75,15 +72,17 @@ export interface ToolAuditEntry {
 }
 
 export interface ToolAuditStore {
-  record(entry: Omit<ToolAuditEntry, "id" | "createdAt">): ToolAuditEntry;
-  listBySession(sessionId: string): ToolAuditEntry[];
+  record(entry: Omit<ToolAuditEntry, "id" | "createdAt">): Promise<ToolAuditEntry>;
+  listBySession(sessionId: string): Promise<ToolAuditEntry[]>;
 }
 
 /** In-memory tool audit (maps to trozbot.tool_calls when DB is wired). */
 export class InMemoryToolAuditStore implements ToolAuditStore {
   private readonly entries: ToolAuditEntry[] = [];
 
-  record(entry: Omit<ToolAuditEntry, "id" | "createdAt">): ToolAuditEntry {
+  async record(
+    entry: Omit<ToolAuditEntry, "id" | "createdAt">,
+  ): Promise<ToolAuditEntry> {
     const full: ToolAuditEntry = {
       ...entry,
       id: randomUUID(),
@@ -93,7 +92,7 @@ export class InMemoryToolAuditStore implements ToolAuditStore {
     return full;
   }
 
-  listBySession(sessionId: string): ToolAuditEntry[] {
+  async listBySession(sessionId: string): Promise<ToolAuditEntry[]> {
     return this.entries.filter((e) => e.sessionId === sessionId);
   }
 }

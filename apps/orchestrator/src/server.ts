@@ -126,7 +126,7 @@ export function createServer(orchestrator: Orchestrator): http.Server {
       if (method === "POST" && toolMatch) {
         const sessionId = toolMatch[1]!;
         const body = await readJson(req);
-        const result = orchestrator.invokeTool(sessionId, body);
+        const result = await orchestrator.invokeTool(sessionId, body);
         const status = result.ok
           ? 200
           : result.error.code === "SESSION_NOT_FOUND"
@@ -181,6 +181,7 @@ export async function listen(
   port: number,
   host = "127.0.0.1",
 ): Promise<{ port: number; host: string }> {
+  // Import resolveBindHost at call sites for HOST env; host param is already resolved.
   await new Promise<void>((resolve, reject) => {
     server.once("error", reject);
     server.listen(port, host, () => resolve());
