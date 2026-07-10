@@ -133,9 +133,30 @@ handle.setAvatarState("speaking");
 handle.destroy();
 ```
 
-## Follow-up (not this package)
+## TROZLANIO host mount (sibling monorepo)
 
-Wire a one-line mount in the TROZLANIO app shell when product is ready — **host PR later**, using this doc. Do not rewrite legacy TROZLANCOM `GlobalTrozBot` as part of embed adoption unless product explicitly migrates.
+When product is ready, the **host** lives in MegaPhoenix92/trozlanio (not this package):
+
+| Piece | Location (TROZLANIO) |
+|-------|----------------------|
+| Page | `/dashboard/trozbot/robot-concierge` |
+| React shell | `client/src/components/chat/TrozbotRobotConcierge.tsx` |
+| Same-origin proxy | `/api/trozbot/*` → `TROZBOT_ORCHESTRATOR_URL` (auth required) |
+| Vendored browser ESM | `client/public/trozbot-embed/trozbot-embed.browser.js` |
+| Sync | `scripts/sync-trozbot-embed.sh` (expects sibling `../trozbot`) |
+
+Local host smoke:
+
+```bash
+# trozbot
+pnpm dev:orchestrator   # :8787
+
+# trozlanio
+export TROZBOT_ORCHESTRATOR_URL=http://127.0.0.1:8787
+# start app as usual, open /dashboard/trozbot/robot-concierge (authenticated)
+```
+
+**Do not rewrite** legacy `GlobalTrozBot` as part of embed adoption unless product explicitly migrates.
 
 ## Related
 
