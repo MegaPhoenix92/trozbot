@@ -60,7 +60,7 @@ The blueprint defines Phase 1 as complete only when a real user can satisfy all 
 - `InMemorySessionStore` is the active session implementation. Redis is a target, not current behavior.
 - Tickets and tool-call audit are in memory unless `DATABASE_URL` is set.
 - The schema is designed for the shared TROZLANIO Postgres data plane; do not create a separate production database.
-- `tenantId` and `userId` are optional tool inputs, but the current TROZLANIO host proxy does not forward a trusted identity contract into the standalone orchestrator.
+- `tenantId` and `userId` are nullable schema hooks for future **trusted server identity context**, not an established host identity contract and not authoritative client fields. Issue #18 / PR #19 hardens this boundary; verified TROZLANIO identity propagation remains a separate lane.
 - Raw audio/PII must not be logged without a retention and redaction policy.
 
 ## Owner-gated dependencies
