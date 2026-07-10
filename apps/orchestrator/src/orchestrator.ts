@@ -131,10 +131,10 @@ export class Orchestrator {
         sessionId,
         subject: typeof base.subject === "string" ? base.subject : "",
         body: typeof base.body === "string" ? base.body : "",
-        ...(trustedContext.tenantId !== undefined
+        ...(typeof trustedContext?.tenantId === "string"
           ? { tenantId: trustedContext.tenantId }
           : {}),
-        ...(trustedContext.userId !== undefined
+        ...(typeof trustedContext?.userId === "string"
           ? { userId: trustedContext.userId }
           : {}),
       });
