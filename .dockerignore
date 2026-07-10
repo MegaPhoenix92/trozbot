@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+**/dist
+.git
+.github
+**/*.test.ts
+**/coverage
+.env
+.env.*
+.clinerules*
+AGENTS.md
+CLAUDE.md
+GEMINI.md

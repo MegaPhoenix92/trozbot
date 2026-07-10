@@ -1,5 +1,5 @@
-# TROZBOT supply-chain baseline (Wave 0 stub).
-# Expand to real image build, Trivy/Grype, SBOM, cosign, and admission wiring in Wave 5.
+# TROZBOT supply-chain baseline (Wave 5).
+# Real secrets/deps/Dockerfile/SBOM steps. Image push + cosign sign require owner registry keys.
 name: security-baseline
 
 on:
@@ -12,15 +12,97 @@ permissions:
   contents: read
 
 jobs:
-  secrets-and-deps:
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deps-audit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Placeholder — secrets scan
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: pnpm audit (high+)
+        run: pnpm audit --audit-level=high
+
+  dockerfile-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Hadolint Dockerfiles
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          recursive: true
+          failure-threshold: warning
+
+  sbom-and-image-path:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@v0
+
+      - name: Filesystem SBOM (source tree)
         run: |
-          echo "TODO: gitleaks / trufflehog on tree"
-          echo "TODO: dependency scan (pnpm audit / osv-scanner)"
-          echo "TODO: Dockerfile lint when Dockerfiles exist"
-          echo "TODO: image scan + SBOM + cosign sign on release path"
-          echo "Baseline workflow is intentionally non-blocking until Wave 5."
+          mkdir -p sbom
+          syft dir:. -o spdx-json > sbom/trozbot-source.spdx.json
+          test -s sbom/trozbot-source.spdx.json
+          echo "SBOM bytes=$(wc -c < sbom/trozbot-source.spdx.json)"
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trozbot-sbom
+          path: sbom/
+
+      - name: Cosign availability check (no owner key = document skip)
+        run: |
+          curl -sSfL https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64 -o /tmp/cosign
+          chmod +x /tmp/cosign
+          /tmp/cosign version
+          if [ -z "${{ secrets.COSIGN_PRIVATE_KEY }}" ]; then
+            echo "SKIP cosign sign: COSIGN_PRIVATE_KEY secret not configured (owner gap)."
+            echo "Documented in docs/SUPPLY_CHAIN.md"
+          else
+            echo "COSIGN_PRIVATE_KEY present — wire sign-on-push in release workflow (not inventing registry)."
+          fi
+
+  # Optional local image build smoke (no push without registry)
+  docker-build-orchestrator:
+    runs-on: ubuntu-latest
+    needs: [dockerfile-lint]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build orchestrator image (no push)
+        run: |
+          docker build -f apps/orchestrator/Dockerfile -t trozbot-orchestrator:ci .
+          docker image inspect trozbot-orchestrator:ci >/dev/null
+
+      - name: Trivy image scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: trozbot-orchestrator:ci
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
