@@ -104,9 +104,9 @@ jobs:
           docker image inspect trozbot-orchestrator:ci >/dev/null
 
       - name: Trivy image scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.29.0
         with:
-          image-ref: trozbot-orchestrator:ci
+          image-ref: "trozbot-orchestrator:ci"
           format: table
           exit-code: "1"
           severity: CRITICAL,HIGH
