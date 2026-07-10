@@ -1,5 +1,5 @@
 import http from "node:http";
-import { createSttProvider } from "./stt.js";
+import { assertMediaConfigSafe, createSttProvider } from "./stt.js";
 import { createTtsProvider } from "./tts.js";
 import { GatewayOrchestratorClient } from "./orchestrator-client.js";
 import { VoiceSessionPipeline } from "./session-pipeline.js";
@@ -31,6 +31,8 @@ function send(res: http.ServerResponse, status: number, body: unknown): void {
 export function createVoiceGateway(opts?: {
   orchestratorUrl?: string;
 }): { server: http.Server; pipeline: VoiceSessionPipeline } {
+  // Refuse partial live config that could mutate tickets then fail on TTS.
+  assertMediaConfigSafe();
   const orchestratorUrl =
     opts?.orchestratorUrl ??
     process.env.ORCHESTRATOR_URL ??
@@ -48,16 +50,16 @@ export function createVoiceGateway(opts?: {
       const url = new URL(req.url ?? "/", "http://localhost");
 
       if (method === "GET" && url.pathname === "/health") {
-        const sttKey = Boolean(process.env.STT_API_KEY?.trim());
-        const ttsKey = Boolean(process.env.TTS_API_KEY?.trim());
+        const live = process.env.TROZBOT_LIVE_MEDIA === "1";
         send(res, 200, {
           ok: true,
           service: "trozbot-voice-gateway",
           wave: 3,
           orchestratorUrl,
           media: {
-            stt: sttKey ? "live-key-present-vendor-pending" : "stub",
-            tts: ttsKey ? "live-key-present-vendor-pending" : "stub",
+            stt: live ? "live-blocked-no-vendor" : "stub",
+            tts: live ? "live-blocked-no-vendor" : "stub",
+            mode: live ? "rejected-at-boot" : "stub",
             interimDoc: "apps/voice-gateway/README.md",
           },
         });
@@ -106,11 +108,25 @@ export function createVoiceGateway(opts?: {
           return;
         }
         if (mode === "ticket") {
-          const result = await pipeline.handleTicketTurn(sessionId, body.text ?? "", {
-            subject: body.subject,
-            body: body.body ?? body.text,
-            textHint: body.text,
-          });
+          if (!body.text?.trim() && !body.body?.trim()) {
+            send(res, 400, {
+              ok: false,
+              error: {
+                code: "INVALID_INPUT",
+                message: "text or body required for ticket turn",
+              },
+            });
+            return;
+          }
+          const result = await pipeline.handleTicketTurn(
+            sessionId,
+            body.text ?? body.body ?? "",
+            {
+              subject: body.subject,
+              body: body.body ?? body.text,
+              textHint: body.text ?? body.body,
+            },
+          );
           send(res, 200, { ok: true, result });
           return;
         }

@@ -49,6 +49,8 @@ export class LiveTtsProvider implements TtsProvider {
 
 export function createTtsProvider(): TtsProvider {
   const key = process.env.TTS_API_KEY?.trim();
-  if (key) return new LiveTtsProvider(key);
+  if (key && process.env.TROZBOT_LIVE_MEDIA === "1") {
+    return new LiveTtsProvider(key);
+  }
   return new StubTtsProvider();
 }

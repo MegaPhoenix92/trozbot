@@ -3,7 +3,7 @@ import type http from "node:http";
 import { createOrchestratorApp } from "../../orchestrator/src/create-app.js";
 import { listen as orchListen } from "../../orchestrator/src/server.js";
 import { createVoiceGateway, listen } from "./server.js";
-import { StubSttProvider } from "./stt.js";
+import { assertMediaConfigSafe, StubSttProvider } from "./stt.js";
 import { StubTtsProvider } from "./tts.js";
 import { GatewayOrchestratorClient } from "./orchestrator-client.js";
 import { VoiceSessionPipeline } from "./session-pipeline.js";
@@ -134,5 +134,23 @@ describe("Wave 3 voice pipeline (stub STT/TTS + real orchestrator)", () => {
     );
     expect(turn.grounded).toBe(true);
     expect(turn.sttStubbed).toBe(true);
+  });
+
+  it("refuses live media boot when keys + TROZBOT_LIVE_MEDIA without vendor", () => {
+    const prevLive = process.env.TROZBOT_LIVE_MEDIA;
+    const prevKey = process.env.TTS_API_KEY;
+    process.env.TROZBOT_LIVE_MEDIA = "1";
+    process.env.TTS_API_KEY = "not-a-real-key";
+    try {
+      expect(() => assertMediaConfigSafe()).toThrow(/vendor adapter/i);
+      expect(() => createVoiceGateway({ orchestratorUrl: orchBase })).toThrow(
+        /vendor adapter/i,
+      );
+    } finally {
+      if (prevLive === undefined) delete process.env.TROZBOT_LIVE_MEDIA;
+      else process.env.TROZBOT_LIVE_MEDIA = prevLive;
+      if (prevKey === undefined) delete process.env.TTS_API_KEY;
+      else process.env.TTS_API_KEY = prevKey;
+    }
   });
 });

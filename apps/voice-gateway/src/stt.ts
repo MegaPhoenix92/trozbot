@@ -55,11 +55,29 @@ export class LiveSttProvider implements SttProvider {
   }
 }
 
+/**
+ * Wave 3 media selection:
+ * - No STT_API_KEY → stub (default interim path)
+ * - STT_API_KEY set without TROZBOT_LIVE_MEDIA=1 → stub + refuse live (keys alone must not enable partial live path)
+ * - Both set → LiveSttProvider (throws until vendor adapter exists)
+ */
 export function createSttProvider(): SttProvider {
   const key = process.env.STT_API_KEY?.trim();
-  if (key) {
-    // Key present but no vendor wired — fail closed rather than silent stub with secrets present.
+  if (key && process.env.TROZBOT_LIVE_MEDIA === "1") {
     return new LiveSttProvider(key);
   }
   return new StubSttProvider();
+}
+
+/** Throws if live media env is incomplete/unsafe for serving. */
+export function assertMediaConfigSafe(): void {
+  const stt = Boolean(process.env.STT_API_KEY?.trim());
+  const tts = Boolean(process.env.TTS_API_KEY?.trim());
+  const live = process.env.TROZBOT_LIVE_MEDIA === "1";
+  if (live && (stt || tts)) {
+    throw new Error(
+      "TROZBOT_LIVE_MEDIA=1 requires a concrete STT/TTS vendor adapter (not shipped in Wave 3). " +
+        "Unset TROZBOT_LIVE_MEDIA and keys to use the documented stub interim path.",
+    );
+  }
 }

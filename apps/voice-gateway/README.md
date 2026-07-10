@@ -8,9 +8,9 @@ Phase 1 tools only (enforced by orchestrator): `kb_retrieve`, `create_ticket`.
 
 | Env | Behavior |
 |-----|----------|
-| `STT_API_KEY` **unset** (default) | **Stub STT** — request `text` field is the transcript |
-| `TTS_API_KEY` **unset** (default) | **Stub TTS** — returns `audio/x-trozbot-stub` pseudo-audio |
-| Key set | Wave 3 fails closed until a concrete vendor adapter is wired (no invented credentials / silent fake live path) |
+| keys **unset** (default) | **Stub STT/TTS** — request `text` is the transcript; pseudo-audio out |
+| `STT_API_KEY` / `TTS_API_KEY` set alone | Still **stub** (keys alone do not enable partial live path) |
+| `TROZBOT_LIVE_MEDIA=1` + keys | **Boot refuses** until a concrete vendor adapter is wired (prevents ticket write then TTS 500) |
 
 **Interim path (Phase 1 without STT/TTS credentials):** use stub mode. The session still yields KB-grounded answers and can create tickets. Documented here intentionally — do not invent API keys.
 
