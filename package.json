@@ -14,7 +14,9 @@
     "dev:orchestrator": "pnpm --filter @trozbot/orchestrator dev",
     "start:orchestrator": "pnpm --filter @trozbot/orchestrator start",
     "dev:web": "pnpm --filter @trozbot/web dev",
-    "start:web": "pnpm --filter @trozbot/web start"
+    "start:web": "pnpm --filter @trozbot/web start",
+    "dev:voice": "pnpm --filter @trozbot/voice-gateway dev",
+    "start:voice": "pnpm --filter @trozbot/voice-gateway start"
   },
   "devDependencies": {
     "typescript": "^5.7.3"

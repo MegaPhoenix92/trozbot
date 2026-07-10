@@ -36,6 +36,10 @@ pnpm dev:orchestrator
 # Terminal B — robot UI (Wave 2)
 pnpm dev:web
 # → http://127.0.0.1:5173  (clearly non-human robot avatar + session wire)
+
+# Terminal C — voice gateway (Wave 3; stub STT/TTS without API keys)
+pnpm dev:voice
+# → http://127.0.0.1:8790/health
 ```
 
 ### Manual smoke (optional)
@@ -98,7 +102,8 @@ docs/               blueprint, ADRs, lanes
 
 **Wave 1** — orchestrator + core contracts + migrations (shipped).  
 **Wave 2** — robot UI (`apps/web`) avatar states + session wire (text path).  
-Wave 3+ — voice gateway / K8s / supply chain (separate issues).
+**Wave 3** — voice gateway stub STT/TTS + session tools (keys optional; interim stub documented).  
+Wave 4+ — thin K8s / supply chain (separate issues).
 
 ## Related
 
