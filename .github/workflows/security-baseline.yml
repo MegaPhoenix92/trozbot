@@ -104,7 +104,7 @@ jobs:
           docker image inspect trozbot-orchestrator:ci >/dev/null
 
       - name: Trivy image scan
-        uses: aquasecurity/trivy-action@0.29.0
+        uses: aquasecurity/trivy-action@v0.30.0
         with:
           image-ref: "trozbot-orchestrator:ci"
           format: table
