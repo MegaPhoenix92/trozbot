@@ -1,0 +1,20 @@
+{
+  "name": "trozbot",
+  "private": true,
+  "version": "0.1.0",
+  "description": "TROZBOT — robot voice support concierge (Wave 1 local slice)",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "typecheck": "pnpm -r run typecheck",
+    "dev:orchestrator": "pnpm --filter @trozbot/orchestrator dev",
+    "start:orchestrator": "pnpm --filter @trozbot/orchestrator start"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
