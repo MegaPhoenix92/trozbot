@@ -17,6 +17,15 @@
 
 → **[`docs/DEMO.md`](./docs/DEMO.md)** — three terminals, curl smoke, bind/DB notes.
 
+## Embed in a host app (TROZLANIO path)
+
+→ **[`docs/EMBED.md`](./docs/EMBED.md)** — `mountTrozbot` / `destroy`, origin allowlist, proxy notes.
+
+```bash
+pnpm dev:orchestrator   # :8787
+pnpm dev:embed          # :8791 fixture host → http://127.0.0.1:8791/
+```
+
 ## Local development
 
 Requires **Node ≥ 20** and **pnpm** (9.x).
@@ -94,12 +103,13 @@ Security day one path: image scan · SBOM · deps · secrets · Dockerfile · **
 ## Layout
 
 ```text
-apps/web            robot UI (scaffold)
-apps/voice-gateway  live audio (scaffold)
-apps/orchestrator   AI tools + policy ← Wave 1
-packages/core       shared contracts ← Wave 1
-deploy/k8s          thin cluster manifests (later)
-docs/               blueprint, ADRs, lanes
+apps/web            robot UI
+apps/voice-gateway  live audio (stub)
+apps/orchestrator   AI tools + policy
+packages/core       shared contracts
+packages/embed      host mount API (TROZLANIO path)
+deploy/k8s          thin cluster manifests
+docs/               blueprint, DEMO, EMBED, ADRs
 ```
 
 ## Status
@@ -110,7 +120,8 @@ docs/               blueprint, ADRs, lanes
 **Wave 4** — thin K8s manifests (`deploy/k8s`, client kustomize validate).  
 **Wave 5** — supply chain CI (gitleaks, audit, hadolint, SBOM, trivy); cosign/registry owner-gated — see [`docs/SUPPLY_CHAIN.md`](./docs/SUPPLY_CHAIN.md).  
 
-**Hardening** — loopback bind guard (`ALLOW_PUBLIC_BIND`); DB-optional tickets/audit (`DATABASE_URL`); honest KB miss; UI empty/error/no-hit polish. Local demo stays unauthenticated.
+**Hardening** — loopback bind guard (`ALLOW_PUBLIC_BIND`); DB-optional tickets/audit (`DATABASE_URL`); honest KB miss; UI empty/error/no-hit polish. Local demo stays unauthenticated.  
+**Embed** — `@trozbot/embed` mount/destroy + origin allowlist + local fixture host (`docs/EMBED.md`).
 
 ## Related
 

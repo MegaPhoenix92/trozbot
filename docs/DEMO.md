@@ -262,4 +262,20 @@ curl -s -X POST "http://127.0.0.1:8790/v1/session/$VSID/turn" \
 - [ ] UI shows non-human robot + avatar state labels + empty/error/no-hit messaging  
 - [ ] (Optional) Voice stub turn returns grounded answer  
 
+---
+
+## Optional — embed host fixture (TROZLANIO path)
+
+Simulates a parent app mounting the robot via `mountTrozbot` (see `docs/EMBED.md`).
+
+```bash
+# With orchestrator already running on :8787
+pnpm dev:embed
+# → http://127.0.0.1:8791/
+```
+
+Use **Start session → Get KB answer → Create ticket** inside the embed shell.
+
+---
+
 **STOP** — do not require Phase 2, live GKE, or owner registry/cosign keys.

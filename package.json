@@ -17,6 +17,8 @@
     "start:web": "pnpm --filter @trozbot/web start",
     "dev:voice": "pnpm --filter @trozbot/voice-gateway dev",
     "start:voice": "pnpm --filter @trozbot/voice-gateway start",
+    "dev:embed": "pnpm --filter @trozbot/embed dev",
+    "start:embed": "pnpm --filter @trozbot/embed start",
     "k8s:dry-run": "kubectl kustomize deploy/k8s >/dev/null && kubectl apply -k deploy/k8s --dry-run=client --validate=false",
     "k8s:validate": "node deploy/k8s/validate.test.mjs"
   },
