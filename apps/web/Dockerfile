@@ -1,4 +1,4 @@
-# TROZBOT web — thin Node image (Wave 5)
+# TROZBOT web — production image (no devDependencies)
 # hadolint ignore=DL3018
 FROM node:22-alpine AS build
 WORKDIR /app
@@ -10,18 +10,14 @@ RUN pnpm install --frozen-lockfile --filter @trozbot/web...
 COPY packages/core ./packages/core
 COPY apps/web ./apps/web
 RUN pnpm --filter @trozbot/core build \
-  && pnpm --filter @trozbot/web build
+  && pnpm --filter @trozbot/web build \
+  && pnpm --filter @trozbot/web deploy --prod /prod
 
 FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-RUN addgroup -S trozbot && adduser -S trozbot -G trozbot \
-  && mkdir -p /app && chown -R trozbot:trozbot /app
-COPY --from=build --chown=trozbot:trozbot /app/apps/web/package.json ./
-COPY --from=build --chown=trozbot:trozbot /app/apps/web/dist ./dist
-COPY --from=build --chown=trozbot:trozbot /app/apps/web/public ./public
-COPY --from=build --chown=trozbot:trozbot /app/packages/core /packages/core
-COPY --from=build --chown=trozbot:trozbot /app/node_modules ./node_modules
+RUN addgroup -S trozbot && adduser -S trozbot -G trozbot
+COPY --from=build --chown=trozbot:trozbot /prod ./
 USER trozbot
 EXPOSE 5173
 ENV PORT=5173
