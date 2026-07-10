@@ -12,9 +12,14 @@
 CREATE SCHEMA IF NOT EXISTS trozbot;
 
 -- Support tickets created by the robot concierge (Phase 1 write tool).
+-- Identity linkage: opaque tenant_id/user_id reference TROZLANIO identity
+-- without duplicating users/tenants tables (see docs/adr/0003-wave1-ticket-storage.md).
+-- No hard FK until TROZLANIO identity table names are locked for this cluster.
 CREATE TABLE IF NOT EXISTS trozbot.tickets (
   id            UUID PRIMARY KEY,
   session_id    UUID,
+  tenant_id     TEXT,
+  user_id       TEXT,
   subject       TEXT NOT NULL,
   body          TEXT NOT NULL,
   status        TEXT NOT NULL DEFAULT 'open',
@@ -24,6 +29,12 @@ CREATE TABLE IF NOT EXISTS trozbot.tickets (
 
 CREATE INDEX IF NOT EXISTS tickets_session_id_idx
   ON trozbot.tickets (session_id);
+
+CREATE INDEX IF NOT EXISTS tickets_tenant_id_idx
+  ON trozbot.tickets (tenant_id);
+
+CREATE INDEX IF NOT EXISTS tickets_user_id_idx
+  ON trozbot.tickets (user_id);
 
 CREATE INDEX IF NOT EXISTS tickets_created_at_idx
   ON trozbot.tickets (created_at DESC);

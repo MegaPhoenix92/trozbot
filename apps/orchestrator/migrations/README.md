@@ -11,7 +11,9 @@
 
 | File | Purpose |
 |------|---------|
-| `001_trozbot_schema.sql` | `trozbot` schema, `tickets`, `tool_calls` (+ indexes) |
+| `001_trozbot_schema.sql` | `trozbot` schema, `tickets` (with opaque `tenant_id`/`user_id`), `tool_calls` (+ indexes) |
+
+Identity linkage decision: [`docs/adr/0003-wave1-ticket-storage.md`](../../../docs/adr/0003-wave1-ticket-storage.md).
 
 ## Apply (when you have a URL)
 

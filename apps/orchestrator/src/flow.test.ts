@@ -94,6 +94,8 @@ describe("Wave 1 vertical slice", () => {
         input: {
           subject: "Agent still failing after restart",
           body: "Tried KB restart steps; still 502 on agent endpoint.",
+          tenantId: "tenant-demo",
+          userId: "user-demo",
         },
       }),
     });
@@ -108,11 +110,15 @@ describe("Wave 1 vertical slice", () => {
     const ticketResult = CreateTicketOutputSchema.parse(ticketBody.result);
     expect(ticketResult.status).toBe("open");
     expect(ticketResult.subject).toBe("Agent still failing after restart");
+    expect(ticketResult.tenantId).toBe("tenant-demo");
+    expect(ticketResult.userId).toBe("user-demo");
 
     const stored = app.tickets.get(ticketResult.ticketId);
     expect(stored).toBeDefined();
     expect(stored!.sessionId).toBe(session.id);
     expect(stored!.body).toMatch(/502/);
+    expect(stored!.tenantId).toBe("tenant-demo");
+    expect(stored!.userId).toBe("user-demo");
 
     const bySession = app.tickets.listBySession(session.id);
     expect(bySession).toHaveLength(1);
@@ -145,5 +151,45 @@ describe("Wave 1 vertical slice", () => {
         (e) => e.toolName === "reset_password" && e.status === "denied",
       ),
     ).toBe(true);
+
+    // Invalid create_ticket input → 400 + audit INVALID_INPUT (not TOOL_FAILED)
+    const bad = await jsonFetch(base, `/sessions/${session.id}/tools`, {
+      method: "POST",
+      body: JSON.stringify({
+        tool: "create_ticket",
+        input: { subject: "", body: "x" },
+      }),
+    });
+    expect(bad.status).toBe(400);
+    const badBody = bad.body as {
+      ok: false;
+      error: { code: string };
+    };
+    expect(badBody.error.code).toBe("INVALID_INPUT");
+    expect(
+      app.audit
+        .listBySession(session.id)
+        .some(
+          (e) =>
+            e.toolName === "create_ticket" &&
+            e.status === "error" &&
+            e.errorCode === "INVALID_INPUT",
+        ),
+    ).toBe(true);
+  });
+
+  it("malformed JSON returns 400 INVALID_JSON not 500", async () => {
+    await boot();
+    const res = await fetch(`${base}/sessions`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{not-json",
+    });
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as {
+      ok: false;
+      error: { code: string };
+    };
+    expect(body.error.code).toBe("INVALID_JSON");
   });
 });

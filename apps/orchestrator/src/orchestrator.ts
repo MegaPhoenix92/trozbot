@@ -115,6 +115,10 @@ export class Orchestrator {
         sessionId,
         subject: typeof base.subject === "string" ? base.subject : "",
         body: typeof base.body === "string" ? base.body : "",
+        ...(typeof base.tenantId === "string"
+          ? { tenantId: base.tenantId }
+          : {}),
+        ...(typeof base.userId === "string" ? { userId: base.userId } : {}),
       });
       this.deps.audit.record({
         sessionId,
@@ -127,20 +131,21 @@ export class Orchestrator {
       return { ok: true, tool: "create_ticket", result };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Tool failed";
+      // Zod validation → INVALID_INPUT; other failures → TOOL_FAILED
+      // Audit must match the client-facing code (security artifact).
+      const code =
+        err instanceof Error && err.name === "ZodError"
+          ? "INVALID_INPUT"
+          : "TOOL_FAILED";
       this.deps.audit.record({
         sessionId,
         toolName: decision.tool,
         input,
         output: null,
         status: "error",
-        errorCode: "TOOL_FAILED",
+        errorCode: code,
       });
       this.deps.sessions.setAvatarState(sessionId, "idle");
-      // Zod validation → INVALID_INPUT; other failures → TOOL_FAILED
-      const code =
-        err instanceof Error && err.name === "ZodError"
-          ? "INVALID_INPUT"
-          : "TOOL_FAILED";
       return {
         ok: false,
         error: { code, message },

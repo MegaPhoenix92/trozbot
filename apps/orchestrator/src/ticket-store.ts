@@ -13,6 +13,8 @@ export interface StoredTicket {
   body: string;
   status: "open";
   createdAt: string;
+  tenantId?: string;
+  userId?: string;
 }
 
 export interface TicketStore {
@@ -38,6 +40,8 @@ export class InMemoryTicketStore implements TicketStore {
       body: input.body,
       status: "open",
       createdAt,
+      ...(input.tenantId !== undefined ? { tenantId: input.tenantId } : {}),
+      ...(input.userId !== undefined ? { userId: input.userId } : {}),
     };
     this.tickets.set(ticket.id, ticket);
     return CreateTicketOutputSchema.parse({
@@ -45,6 +49,8 @@ export class InMemoryTicketStore implements TicketStore {
       status: ticket.status,
       subject: ticket.subject,
       createdAt: ticket.createdAt,
+      ...(ticket.tenantId !== undefined ? { tenantId: ticket.tenantId } : {}),
+      ...(ticket.userId !== undefined ? { userId: ticket.userId } : {}),
     });
   }
 

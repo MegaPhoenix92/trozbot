@@ -46,6 +46,10 @@ export const CreateTicketInputSchema = z.object({
   sessionId: SessionIdSchema,
   subject: z.string().min(1).max(200),
   body: z.string().min(1).max(10_000),
+  /** Opaque TROZLANIO tenant reference — do not invent local tenants. */
+  tenantId: z.string().min(1).max(128).optional(),
+  /** Opaque TROZLANIO user reference — do not invent local users. */
+  userId: z.string().min(1).max(128).optional(),
 });
 
 export type CreateTicketInput = z.infer<typeof CreateTicketInputSchema>;
@@ -55,6 +59,8 @@ export const CreateTicketOutputSchema = z.object({
   status: z.literal("open"),
   subject: z.string().min(1),
   createdAt: z.string().datetime(),
+  tenantId: z.string().min(1).max(128).optional(),
+  userId: z.string().min(1).max(128).optional(),
 });
 
 export type CreateTicketOutput = z.infer<typeof CreateTicketOutputSchema>;
