@@ -1,6 +1,6 @@
 /**
  * Browser UI for TROZBOT robot concierge (Wave 2).
- * Uses orchestrator HTTP API directly (CORS enabled on orchestrator).
+ * Same-origin /api proxy → orchestrator (no cross-origin ticket API).
  * Clearly non-human — geometric robot avatar only.
  */
 
@@ -31,7 +31,8 @@ async function main() {
   const cfg = await cfgRes.json();
   document.getElementById("identity").textContent = cfg.identityLabel;
 
-  const baseUrl = cfg.orchestratorUrl.replace(/\/$/, "");
+  // Same-origin proxy — matches server /api/* routes
+  const apiBase = (cfg.apiBase || "/api").replace(/\/$/, "");
   let sessionId = null;
 
   const btnStart = document.getElementById("btnStart");
@@ -42,7 +43,7 @@ async function main() {
     showError("");
     setAvatar("thinking");
     try {
-      const res = await fetch(`${baseUrl}/sessions`, {
+      const res = await fetch(`${apiBase}/sessions`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ correlationId: "web-ui" }),
@@ -72,7 +73,7 @@ async function main() {
     await new Promise((r) => setTimeout(r, 120));
     setAvatar("thinking");
     try {
-      const res = await fetch(`${baseUrl}/sessions/${sessionId}/tools`, {
+      const res = await fetch(`${apiBase}/sessions/${sessionId}/tools`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -101,7 +102,7 @@ async function main() {
     showError("");
     setAvatar("thinking");
     try {
-      const res = await fetch(`${baseUrl}/sessions/${sessionId}/tools`, {
+      const res = await fetch(`${apiBase}/sessions/${sessionId}/tools`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({

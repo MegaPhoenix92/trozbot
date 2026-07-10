@@ -1,11 +1,11 @@
 import http from "node:http";
 import { readFile } from "node:fs/promises";
-import { dirname, extname, join } from "node:path";
+import { dirname, extname, join, normalize, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-// src/ or dist/
-const publicDir = join(here, "..", "public");
+// src/ or dist/ → package public/
+const publicDir = resolve(join(here, "..", "public"));
 
 const TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -14,6 +14,42 @@ const TYPES: Record<string, string> = {
   ".json": "application/json; charset=utf-8",
   ".svg": "image/svg+xml",
 };
+
+function safePublicPath(urlPath: string): string | null {
+  const cleaned = urlPath.split("?")[0] ?? "/";
+  const relative = cleaned === "/" ? "index.html" : cleaned.replace(/^\/+/, "");
+  const candidate = resolve(publicDir, normalize(relative));
+  const rootWithSep = publicDir.endsWith(sep) ? publicDir : publicDir + sep;
+  if (candidate !== publicDir && !candidate.startsWith(rootWithSep)) {
+    return null;
+  }
+  return candidate;
+}
+
+async function proxyToOrchestrator(
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+  orchestratorUrl: string,
+  apiPath: string,
+): Promise<void> {
+  const target = new URL(apiPath, orchestratorUrl);
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  const body = Buffer.concat(chunks);
+  const upstream = await fetch(target, {
+    method: req.method ?? "GET",
+    headers: { "content-type": "application/json" },
+    body: body.length ? body : undefined,
+  });
+  const text = await upstream.text();
+  res.writeHead(upstream.status, {
+    "content-type":
+      upstream.headers.get("content-type") ?? "application/json; charset=utf-8",
+  });
+  res.end(text);
+}
 
 export function createWebServer(opts?: {
   orchestratorUrl?: string;
@@ -33,6 +69,7 @@ export function createWebServer(opts?: {
           service: "trozbot-web",
           wave: 2,
           orchestratorUrl,
+          apiProxy: "/api",
         });
         res.writeHead(200, {
           "content-type": "application/json; charset=utf-8",
@@ -42,7 +79,9 @@ export function createWebServer(opts?: {
       }
 
       if (req.method === "GET" && url.pathname === "/config.json") {
+        // Browser uses same-origin /api proxy — no cross-origin orchestrator URL needed.
         const body = JSON.stringify({
+          apiBase: "/api",
           orchestratorUrl,
           identityLabel: "TROZBOT robot concierge",
           isRobot: true,
@@ -55,10 +94,34 @@ export function createWebServer(opts?: {
         return;
       }
 
-      let path = url.pathname === "/" ? "/index.html" : url.pathname;
-      // prevent path escape
-      path = path.replace(/\.\./g, "");
-      const filePath = join(publicDir, path);
+      // Same-origin proxy to orchestrator (avoids wildcard CORS on ticket API)
+      if (url.pathname === "/api/health" && req.method === "GET") {
+        await proxyToOrchestrator(req, res, orchestratorUrl, "/health");
+        return;
+      }
+      if (url.pathname === "/api/sessions" && req.method === "POST") {
+        await proxyToOrchestrator(req, res, orchestratorUrl, "/sessions");
+        return;
+      }
+      const toolMatch = url.pathname.match(
+        /^\/api\/sessions\/([0-9a-fA-F-]{36})\/tools$/,
+      );
+      if (toolMatch && req.method === "POST") {
+        await proxyToOrchestrator(
+          req,
+          res,
+          orchestratorUrl,
+          `/sessions/${toolMatch[1]!}/tools`,
+        );
+        return;
+      }
+
+      const filePath = safePublicPath(url.pathname);
+      if (!filePath) {
+        res.writeHead(400, { "content-type": "text/plain" });
+        res.end("Bad path");
+        return;
+      }
       const data = await readFile(filePath);
       const type = TYPES[extname(filePath)] ?? "application/octet-stream";
       res.writeHead(200, { "content-type": type });
@@ -75,9 +138,9 @@ export async function listen(
   port: number,
   host = "127.0.0.1",
 ): Promise<{ port: number; host: string }> {
-  await new Promise<void>((resolve, reject) => {
+  await new Promise<void>((resolvePromise, reject) => {
     server.once("error", reject);
-    server.listen(port, host, () => resolve());
+    server.listen(port, host, () => resolvePromise());
   });
   const addr = server.address();
   if (addr && typeof addr === "object") {
@@ -101,9 +164,15 @@ async function main(): Promise<void> {
   );
 }
 
-// Run when this file is the process entry (tsx src/server.ts / node dist/server.js)
-const entry = process.argv[1] ? fileURLToPath(new URL(process.argv[1], "file://")) : "";
+const entry = process.argv[1]
+  ? fileURLToPath(new URL(process.argv[1], "file://"))
+  : "";
 const self = fileURLToPath(import.meta.url);
-if (entry && (entry === self || entry.endsWith("/server.ts") || entry.endsWith("/server.js"))) {
+if (
+  entry &&
+  (entry === self ||
+    entry.endsWith("/server.ts") ||
+    entry.endsWith("/server.js"))
+) {
   void main();
 }

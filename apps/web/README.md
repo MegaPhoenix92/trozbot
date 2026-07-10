@@ -4,7 +4,8 @@ Clearly **non-human** robot concierge surface with avatar states:
 
 - `idle` · `listening` · `thinking` · `speaking`
 
-Wires a text session to the Wave 1 orchestrator (`POST /sessions`, tool invoke). Full voice media is Wave 3.
+Wires a text session to the Wave 1 orchestrator via **same-origin `/api` proxy**
+(`POST /api/sessions`, tool invoke). Full voice media is Wave 3.
 
 ## Local run
 
