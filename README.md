@@ -13,7 +13,15 @@
 
 > Robot pops up → user speaks → KB-grounded answer → create ticket if needed → one session → thin K8s + security baseline.
 
-## Local development (Waves 1–2)
+## Demo (Phase 1 local)
+
+Copy-paste walkthrough for orchestrator + robot UI + stub voice:
+
+→ **[`docs/DEMO.md`](./docs/DEMO.md)**
+
+Quick start: three terminals (`pnpm dev:orchestrator`, `pnpm dev:web`, `pnpm dev:voice`) then open http://127.0.0.1:5173 or run the curl smoke in the demo doc.
+
+## Local development (Waves 1–3)
 
 Requires **Node ≥ 20** and **pnpm** (9.x).
 
