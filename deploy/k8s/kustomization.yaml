@@ -7,5 +7,7 @@ resources:
   - orchestrator.yaml
   - web.yaml
   - voice-gateway.yaml
-commonLabels:
-  app.kubernetes.io/part-of: trozbot
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: trozbot
+    includeSelectors: false
