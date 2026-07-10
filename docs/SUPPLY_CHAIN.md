@@ -9,7 +9,7 @@
 | Dockerfile lint | `dockerfile-lint` (Hadolint recursive) | **Real** |
 | SBOM | `sbom-and-image-path` (Syft filesystem SPDX) | **Real** artifact |
 | Image build | `docker-build-orchestrator` (no push) | **Real** local build |
-| Image CVE scan | Trivy on built orchestrator image | **Real** CRITICAL/HIGH |
+| Image CVE scan | Trivy on built orchestrator image | **Real** — table CRITICAL/HIGH; gate fails on CRITICAL with fixes |
 | Cosign sign | Key check only | **Skip** without owner `COSIGN_PRIVATE_KEY` |
 | Registry push | — | **Owner gap** |
 | Cluster admission verify | — | **Owner gap** (needs signed images + policy install) |
