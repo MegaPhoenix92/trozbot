@@ -1,12 +1,10 @@
 # @trozbot/embed
 
-Host-facing mount API for the TROZBOT robot shell (Phase 1).
+Host-facing mount API for the TROZBOT robot shell.
 
-## Why a package (not apps/web embed mode)
+## Why a package
 
-Hosts (TROZLANIO) need a **small, versionable import** with pure config/allowlist
-units and no coupling to the full web static app. `apps/web` remains the
-standalone demo UI; this package is the integration surface.
+Hosts such as TROZLANIO need a small, versionable import with pure configuration and origin-allowlist units, independent of the full static demo app. `apps/web` remains the standalone text UI; this package is the integration surface.
 
 ## API
 
@@ -14,24 +12,34 @@ standalone demo UI; this package is the integration surface.
 import { mountTrozbot } from "@trozbot/embed";
 
 const handle = mountTrozbot(document.getElementById("slot")!, {
-  apiProxyPath: "/api", // recommended for production hosts
-  // orchestratorBaseUrl: "http://127.0.0.1:8787", // loopback only unless ALLOW_PUBLIC_ORCHESTRATOR
+  apiProxyPath: "/api/trozbot", // recommended for authenticated production hosts
+  // orchestratorBaseUrl: "http://127.0.0.1:8787", // loopback development
   theme: "dark",
-  allowedOrigins: ["https://app.example"], // never "*"
+  allowedOrigins: ["https://app.example"], // exact origins; never "*"
   onTicketCreated: ({ ticketId }) => {},
 });
+
+await handle.startSession();
+const kb = await handle.kbRetrieve("how does the goal loop work?");
+// Preserves answer, hit, grounded, and sources from the orchestrator.
+const ticket = await handle.createTicket("Subject", "Body");
 
 handle.destroy();
 ```
 
-See `docs/EMBED.md` at repo root.
+The package does not reimplement tool policy. The orchestrator allows only `kb_retrieve` and `create_ticket` in Phase 1.
+
+See [`../../docs/EMBED.md`](../../docs/EMBED.md) for host proxy, security, synchronization, and TROZLANIO integration details.
 
 ## Local fixture
 
 ```bash
 # terminal A
 pnpm dev:orchestrator
+
 # terminal B
 pnpm dev:embed
 # open http://127.0.0.1:8791/
 ```
+
+The full Phase 1 target and current gaps are tracked separately in [`../../docs/STATUS.md`](../../docs/STATUS.md).
