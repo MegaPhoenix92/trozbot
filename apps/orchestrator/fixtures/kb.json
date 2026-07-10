@@ -34,5 +34,11 @@
     "title": "Support session basics",
     "body": "Each robot session has an id and avatar states idle, listening, thinking, and speaking. Start a session before asking the knowledge base or creating a ticket. Sessions are local demo state unless wired to durable storage.",
     "tags": ["session", "avatar", "idle", "listening", "thinking", "speaking"]
+  },
+  {
+    "id": "kb-goal-loop",
+    "title": "How the /goal agent build loop works",
+    "body": "A /goal is a persistent mission contract with an objective, scope, hard DO-NOT rules, acceptance evidence, a review and merge gate, and a STOP condition. One cycle should deliver one meaningful vertical slice, usually one issue and one pull request. The outer orchestrator goal owns sequencing, merge authority, and optional self-chaining; a builder receives one bounded inner goal, implements it, opens a pull request, and stops. The builder gets zero review votes on its own work. Security-shaped changes require non-builder primary-source review. The loop stops when acceptance is proven or an owner blocker such as credentials, a cluster, a registry, or vendor keys is reached. Agents must not invent production secrets or silently start the next phase.",
+    "tags": ["goal", "/goal", "agentic", "loop", "orchestrator", "builder", "review", "merge", "stop", "wave", "self-chain"]
   }
 ]
