@@ -1,27 +1,44 @@
-# TROZBOT Phase 1 Blueprint — Robot Voice Support Concierge
+# TROZBOT Phase 1 blueprint — robot voice support concierge
 
-> **Product name:** TROZBOT (TrustBot concierge surface)  
+> **Product:** TROZBOT (TrustBot concierge surface)  
 > **Home:** `MegaPhoenix92/trozbot` · local: `TROZLAN/TROZLANIO/trozbot`  
-> **Platform core:** TROZLANIO (shared Postgres; not a separate product DB)  
-> **Source conversation:** founder voice thread — robot concierge → KB → ticket; K8s from day one; read-then-confirm automation
+> **Platform core:** TROZLANIO  
+> **Data decision:** shared TROZLANIO Postgres, schema-isolated; never a separate product database  
+> **Runtime target:** thin Kubernetes  
+> **Current evidence:** [`STATUS.md`](./STATUS.md)
+
+## How to read this document
+
+This blueprint defines the **target and acceptance contract**. It is not a claim that every row is already live in production.
+
+As of July 10, 2026:
+
+- Waves 1–5 have code artifacts;
+- hardening, the embed package, and the TROZLANIO host surface exist;
+- TROZLANIO PR #3480 live-wired the host proxy through the active route registry;
+- real voice, Redis sessions, live shared-DB proof, live cluster deployment, image signing, and admission verification remain incomplete or owner-gated.
+
+Use [`STATUS.md`](./STATUS.md) for the evidence-backed current state. A manifest, stub, or optional code path does not satisfy a production acceptance criterion by itself.
 
 ---
 
-## Goal (Phase 1)
+## Goal
 
-Ship a **real-time voice support agent** inside the app:
+Ship a real-time voice support agent inside TROZLANIO:
 
-- Clearly **non-human robot character** (approachable, no human masquerade)
-- Talks the user through software issues
-- Answers from a **knowledge base**
-- **Creates a support ticket** when needed
-- Runs on a **small Kubernetes cluster** (GKE-class), not App Engine
+- a clearly **non-human robot character**;
+- spoken support for software issues;
+- answers grounded in a knowledge base;
+- support-ticket creation when needed;
+- one continuous session;
+- a small Kubernetes deployment;
+- a release path with image scanning, SBOM, signing, and admission verification.
 
-**First vertical slice (must work end-to-end):**
+**Required vertical slice:**
 
-> Robot pops up → user speaks → helpful KB answer → optional ticket create → one session.
+> Robot opens → user speaks → helpful KB answer → optional ticket creation → one continuous session on the deployed path.
 
-Automation grows under the surface later. Shell first, then safe actions.
+Automation grows later. Phase 1 is support guidance plus ticket creation—not autonomous account or infrastructure modification.
 
 ---
 
@@ -29,181 +46,218 @@ Automation grows under the surface later. Shell first, then safe actions.
 
 | Principle | Meaning |
 |-----------|---------|
-| Robot, not human | Avatar + voice + copy never pretends to be a human agent |
-| Vertical slice first | One real path (KB answer + create ticket), not a platform of stubs |
-| Read → confirm → act | Phase 1 is read + ticket only; later automations require explicit user confirmation |
-| Thin K8s | One small cluster, a few clean services — do not over-microservice |
-| Shared data plane | **Same Postgres as TROZLANIO** (schema-namespaced tables). Managed Redis for sessions/cache |
-| Security backbone day one | Image scan, SBOM, dependency + secrets + Dockerfile scan; signed images; admission verify signatures |
-| Multi-agent product | Built and operated by **all agent lineages** (Claude/Fable, Codex, Grok, Hermes) — not a Fable-only loop |
+| **Robot, not human** | Avatar, voice, and copy never pretend to be a human agent |
+| **Vertical slice first** | One real end-to-end path, not a platform made only of stubs |
+| **Read → confirm → act** | Phase 1 reads KB content and may create a ticket; later risky actions require explicit confirmation |
+| **Thin K8s** | One small cluster and a few clean workloads; no premature service mesh or event platform |
+| **Shared data plane** | Reuse TROZLANIO Postgres with schema isolation; Redis is the target for ephemeral sessions/cache |
+| **Security backbone** | Scan, SBOM, sign, and verify images used by the deployment |
+| **Multi-lineage delivery** | Claude/Fable, Codex, Grok, and Hermes operate under the same tracked contract |
+| **Evidence over labels** | “Wave shipped” means code exists; “Phase 1 accepted” means the deployed behavior is proven |
 
 ---
 
-## Phase 1 architecture
+## Target architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
-│  App shell (TROZLANIO / embed host)                         │
+│ TROZLANIO app shell / authenticated embed host              │
 │  ┌───────────────────────────────────────────────────────┐  │
-│  │  Robot UI — idle | listening | thinking | speaking    │  │
+│  │ Robot UI — idle | listening | thinking | speaking    │  │
 │  └──────────────────────────┬────────────────────────────┘  │
 └─────────────────────────────┼───────────────────────────────┘
-                              │ WebRTC / WS audio + session
+                              │ real-time audio + session
                               ▼
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  Voice Gateway  │───▶│  AI Orchestrator │───▶│  KB + Ticketing │
-│  (live audio)   │    │  (tools + policy)│    │  (TROZLANIO DB) │
+│ Voice Gateway   │───▶│ AI Orchestrator  │───▶│ KB + Ticketing  │
+│ STT / TTS edge  │    │ tools + policy   │    │ shared DB       │
 └─────────────────┘    └────────┬─────────┘    └─────────────────┘
                                 │
                          Redis sessions
-                         Postgres (shared)
+                         shared Postgres
 ```
 
-### Core components
+### Current baseline
 
-| Component | Responsibility | Phase 1 bar |
-|-----------|----------------|-------------|
-| **Frontend robot** | Avatar states: idle, listening, thinking, speaking; session UX | Visible states + mic; no human face/name |
-| **Voice gateway** | Live audio in/out; STT/TTS edge | One duplex path per session |
-| **AI orchestrator** | Intent, KB retrieval, tool policy, ticket create | KB answer + `create_ticket` only |
-| **Data plane** | Sessions (Redis); durable state + tickets + KB pointers (Postgres shared with TROZLANIO) | Managed Postgres + Redis |
-| **K8s deploy** | Ingress, secrets, health checks, resource limits, basic logging | One cluster, few services |
+The current host path is narrower:
 
-### Out of scope (Phase 1)
+```text
+TROZLANIO protected page or standalone text UI
+  → authenticated same-origin proxy or direct loopback
+  → TROZBOT orchestrator
+  → fixture KB + create_ticket
+  → in-memory sessions
+  → in-memory tickets/audit or optional Postgres
+```
 
-- Risky write automations (password resets, billing changes, account deletes)
-- Autonomous “fix it for me” without confirmation
-- Many microservices / event mesh / multi-cluster
-- Human handoff masquerading as the robot
-- Separate TROZBOT-only production database (use TROZLANIO shared DB)
+The current voice gateway uses deterministic stub STT/TTS. See [`STATUS.md`](./STATUS.md) before assigning the next closure task.
 
 ---
 
-## Data contract (shared TROZLANIO DB)
+## Core components
 
-**Decision:** TROZBOT does **not** own a greenfield production DB. It uses the **same Postgres as TROZLANIO**, with a dedicated schema (recommended: `trozbot`) and clear ownership of tables.
-
-| Concern | Where |
-|---------|--------|
-| Users / tenants / auth | TROZLANIO (existing) |
-| Tickets | TROZLANIO ticketing surface **or** `trozbot.tickets` linked by `tenant_id` / `user_id` — pick one path in implementation ADR |
-| Knowledge base docs / chunks | `trozbot.kb_*` (or existing COM KB if migrated) |
-| Voice sessions / tool audit | `trozbot.sessions`, `trozbot.tool_calls` |
-| Ephemeral session state | Redis (`trozbot:session:*`) |
-
-Migrations: live in this repo under `apps/orchestrator` (or `packages/db`) but apply to the **shared** cluster/branch with schema isolation. Never invent a second source of truth for users/tenants.
+| Component | Phase 1 target | Current evidence |
+|-----------|----------------|------------------|
+| **Frontend robot** | Non-human avatar, visible states, microphone/session UX | Avatar and text session flow exist; microphone/live spoken flow is open |
+| **Voice gateway** | One duplex live audio path per session | Session pipeline exists; STT/TTS are stubbed |
+| **AI orchestrator** | KB retrieval, tool policy, `create_ticket` only | Implemented locally with honest hit/miss behavior |
+| **Data plane** | Redis sessions; durable tickets/audit/KB pointers on shared Postgres | Sessions are in memory; tickets/audit are memory or optional Postgres |
+| **Host integration** | Protected TROZLANIO page and same-origin authenticated proxy | Implemented and live-wired by TROZLANIO PR #3480 |
+| **K8s deployment** | Ingress, secrets, probes, limits, structured logging | Manifests and client-side validation exist; live deploy is unproven |
+| **Supply chain** | Scan, SBOM, registry push, sign, admission verify | Scans/SBOM/image build exist; push/sign/admission are open |
 
 ---
 
-## Deployment (Kubernetes from day one)
+## Out of scope for Phase 1
 
-**Target:** small GKE (or equivalent) cluster.
-
-| Layer | Phase 1 |
-|-------|---------|
-| Cluster | One small cluster, one primary namespace `trozbot` |
-| Workloads | `web` (or embed static), `voice-gateway`, `orchestrator` — start with 2–3 Deployments max |
-| Data | Managed Postgres (shared TROZLANIO), managed Redis |
-| Ingress | TLS ingress → voice + API paths |
-| Secrets | K8s secrets / external secrets; no secrets in git |
-| Ops | Health probes, CPU/mem limits, structured logs |
-
-### Security baseline (day one)
-
-Every image push path must include:
-
-1. **Container image scan** (CVE gate)
-2. **SBOM** generation
-3. **Dependency scan**
-4. **Secrets scan**
-5. **Dockerfile lint/scan**
-6. **Image signing** before registry push
-7. **Admission policy**: verify signature; basic deny rules for unsigned / critical CVEs
-
-Start small: CI does scans + sign; cluster enforces verify. Expand policies as services grow.
+- password resets, billing changes, account deletion, or other risky write automations;
+- autonomous “fix it for me” actions without explicit confirmation;
+- many microservices, event mesh, service mesh, multi-cluster, or speculative scale-out;
+- a human agent masquerading as the robot;
+- a separate TROZBOT-only production database;
+- Phase 2 confirm-to-act tools unless the owner explicitly changes the outer mission.
 
 ---
 
-## Success criteria (Phase 1 done when)
+## Shared data contract
 
-A real user session can:
+TROZBOT does not own a greenfield production database. It uses the same Postgres data plane as TROZLANIO with a dedicated schema, recommended name `trozbot`.
 
-1. Open the robot concierge (non-human avatar)
-2. Speak a software support issue
-3. Receive a **helpful answer grounded in the knowledge base**
-4. Create a **support ticket** if needed
-5. Complete 1–4 in a **single continuous session**
-6. Run the slice on the **K8s cluster** with health checks + logging
-7. Pass the **security baseline** on images used in that deploy
+| Concern | Target location | Current state |
+|---------|-----------------|---------------|
+| Users / tenants / auth | TROZLANIO identity system | Host page is protected; trusted identity is not yet propagated into standalone tool context |
+| Tickets | TROZLANIO ticketing surface or `trozbot.tickets` linked by tenant/user IDs | `trozbot.tickets` migration and optional store exist |
+| Knowledge base | `trozbot.kb_*` or an explicitly migrated existing KB | Fixture file is current retrieval source |
+| Voice sessions | Redis plus optional durable audit | Active sessions use `InMemorySessionStore` |
+| Tool audit | `trozbot.tool_calls` | Memory or optional Postgres store |
 
----
+Migrations live in this repository but apply to the **shared** TROZLANIO database with schema isolation. Never duplicate user, tenant, or auth tables.
 
-## Phase 2+ (explicitly later)
+### Identity rule
 
-- Safe automations with **confirm-to-act** (read-only checks → propose fix → user confirms → execute)
-- More tools (status, diagnostics, limited account reads)
-- Richer avatar / multi-language
-- Scale-out voice + queue workers only when the vertical slice is proven
+`tenantId` and `userId` may only come from a trusted host/server identity contract. Do not accept client-supplied identity as authoritative. Until that contract is implemented, record the limitation honestly.
 
 ---
 
-## Multi-agent operating model
+## Deployment target
 
-TROZBOT is **agentic software** and an **agentic product workspace**:
+| Layer | Phase 1 target | Current evidence |
+|-------|----------------|------------------|
+| Cluster | One small GKE-class cluster, namespace `trozbot` | Owner-gated; no live smoke recorded |
+| Workloads | Web/embed static surface, voice gateway, orchestrator | Manifests exist for a thin service set |
+| Data | Shared managed Postgres + managed Redis | Access/configuration owner-gated |
+| Ingress | TLS paths to voice and API | Manifest path exists; live ingress unproven |
+| Secrets | K8s/external secrets only | Secret references exist; no secrets in Git |
+| Operations | Health probes, CPU/memory limits, structured logs | Manifest and service logging foundations exist |
 
-| Lineage | Default roles |
-|---------|----------------|
-| **Claude / Fable** | Orchestration, product judgment, consult, review |
-| **Codex** | Primary builder (services, K8s, CI) |
-| **Grok** | Builder/reviewer (xAI); security-gate eligible with primary-source verify |
-| **Hermes** | Builder/reviewer (non-xAI); security-gate eligible |
-
-See:
-
-- `AGENTS.md` — single source of truth for every agent
-- `docs/AGENTIC_OPERATING_MODEL.md` — loops, lanes, merge gates
-- `docs/DO_NOT.md` — hard constraints
-
-**Not Fable-only:** any lineage may build, review, or run a `/goal` lane if it follows `AGENTS.md` and the security merge gate.
+Kubernetes “from day one” means the architecture and manifests are designed for K8s. It does not mean a client-side dry-run is equivalent to a live deployment.
 
 ---
 
-## Implementation waves (suggested)
+## Security baseline
 
-| Wave | Outcome |
-|------|---------|
-| **0 — Repo spine** | Blueprint, AGENTS.md, folder skeleton, CI security stubs, shared-DB ADR |
-| **1 — Vertical slice local** | Orchestrator + mock voice path + KB retrieve + create_ticket against shared DB schema |
-| **2 — Robot UI** | Avatar states + session wiring in embed host |
-| **3 — Real voice gateway** | STT/TTS path; one production-like session |
-| **4 — K8s thin deploy** | Deployments, ingress, secrets, probes, logs |
-| **5 — Supply chain** | Full scan + SBOM + sign + admission verify green |
+Every image used in the deployed path must have:
 
-Stop and reassess after Wave 1–2 if the shell feels wrong; expand automation only after the shell is good.
+1. container image CVE scan;
+2. SBOM generation;
+3. dependency scan;
+4. secrets scan;
+5. Dockerfile lint/scan;
+6. image signing before registry use;
+7. admission verification that denies unsigned images and enforces agreed vulnerability policy.
+
+Current CI implements scans, filesystem SBOM, image build, and Trivy. Registry push, signing identity, and admission-controller installation remain owner-gated. See [`SUPPLY_CHAIN.md`](./SUPPLY_CHAIN.md).
+
+Do not weaken the admission target merely to make a deployment green.
 
 ---
 
-## Name & placement (locked from thread)
+## Phase 1 success criteria
+
+Phase 1 is accepted only when a real user can:
+
+1. open the clearly non-human robot concierge;
+2. **speak** a software support issue;
+3. receive a helpful answer grounded in the knowledge base;
+4. create a support ticket if needed;
+5. complete steps 1–4 in one continuous session;
+6. run that slice on Kubernetes with health checks and logging;
+7. pass the security baseline on the images used in that deployment.
+
+The current verdict for each item is maintained in [`STATUS.md`](./STATUS.md). At the time of this reconciliation, the seven-item set is not fully accepted.
+
+---
+
+## Phase 2 and later
+
+Explicitly later:
+
+- safe automations with confirm-to-act;
+- more read tools for status and diagnostics;
+- limited account reads under a trusted identity contract;
+- richer avatar and multilingual support;
+- queue workers and scale-out only after the vertical slice is proven.
+
+No Phase 2 task self-starts from a Phase 1 merge.
+
+---
+
+## Agentic operating model
+
+Tracked public contracts:
+
+- [`GOAL_LOOP.md`](./GOAL_LOOP.md) — outer/inner goals, evidence, review, merge, STOP;
+- [`AGENTIC_OPERATING_MODEL.md`](./AGENTIC_OPERATING_MODEL.md) — lineages and lane defaults;
+- [`STATUS.md`](./STATUS.md) — current truth;
+- [`DO_NOT.md`](./DO_NOT.md) — hard boundaries.
+
+Any active lineage may build, review, or orchestrate. The builder receives zero review votes. Security-shaped changes require at least two non-builder approvals and primary-source verification.
+
+Local `AGENTS.md`-style files may exist but are intentionally untracked; they may not override these public contracts.
+
+---
+
+## Delivery waves
+
+| Wave | Target outcome | Reconciled state |
+|------|----------------|------------------|
+| **0 — repo spine** | Blueprint, contracts, folders, ADRs, CI skeleton | Complete |
+| **1 — local vertical slice** | Orchestrator, KB, `create_ticket`, schema | Code-complete locally; live shared-DB proof open |
+| **2 — robot UI** | Avatar states and session wiring | Text path complete; mic/live spoken UX open |
+| **3 — real voice gateway** | Production-like STT/TTS session | Stub pipeline complete; real media open |
+| **4 — thin K8s deploy** | Live workloads, ingress, secrets, probes, logs | Manifests complete; live deployment open |
+| **5 — supply chain** | Scan, SBOM, sign, admission verify | Scan/SBOM partial complete; sign/admission open |
+| **Host** | Protected TROZLANIO mount and authenticated proxy | Complete locally after PR #3480 |
+
+Historical wave code should not be rebuilt without a confirmed defect. Future goals select a remaining acceptance gap from [`STATUS.md`](./STATUS.md).
+
+---
+
+## Locked name and placement
 
 | Decision | Choice |
 |----------|--------|
 | Platform core | **TROZLANIO** |
-| Product / repo | **TROZBOT** (TrustBot concierge) |
-| Repo | Public: `https://github.com/MegaPhoenix92/trozbot` |
-| DB | **Shared with TROZLANIO** (schema-isolated), not a separate product DB |
-| Runtime | **Kubernetes** from the beginning (disciplined, thin) |
+| Product / repository | **TROZBOT** |
+| Public repo | `https://github.com/MegaPhoenix92/trozbot` |
+| Database | Shared TROZLANIO Postgres, schema-isolated |
+| Runtime target | Thin Kubernetes |
+| Host route | `/dashboard/trozbot/robot-concierge` |
+| Host proxy | Authenticated `/api/trozbot/*` |
 
 ---
 
-## Agent copy-paste brief (Phase 1)
+## Copy-ready agent brief
 
 ```text
-Product: TROZBOT — robot voice support concierge on TROZLANIO.
-Phase 1 vertical slice: robot UI states + voice gateway + AI orchestrator +
-KB answers + create_ticket, single session, non-human character only.
-Deploy: thin K8s (GKE-class), managed Redis, SHARED Postgres with TROZLANIO
-(schema trozbot). Security day one: image/dep/secrets/Dockerfile scan, SBOM,
-signed images, admission verify. No risky automation; read-only + ticket only.
-All agent lineages (claude/fable, codex, grok, hermes) may build/review under AGENTS.md.
-Do not invent a separate product DB. Do not over-microservice. Ship the slice.
+Product: TROZBOT — a clearly non-human robot support concierge hosted by TROZLANIO.
+
+Read docs/STATUS.md before work. The Waves 1–5 code spine and host mount exist,
+but Phase 1 is not fully accepted. Select only the explicitly assigned remaining
+gap. Keep tools limited to kb_retrieve + create_ticket. Use the shared TROZLANIO
+Postgres data plane; do not create a separate product DB. Real voice, Redis,
+identity propagation, live K8s, signing, and admission are closure lanes, not
+assumed facts. Builder gets zero review votes. Security-shaped changes require
+at least two non-builder approvals and primary-source verification. Open one PR,
+prove the behavior, then STOP unless the outer goal explicitly authorizes chaining.
 ```
