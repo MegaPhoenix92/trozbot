@@ -41,4 +41,19 @@ describe("resolveEmbedConfig", () => {
       }),
     ).toThrow(/wildcard/i);
   });
+
+  it("rejects absolute apiProxyPath (SSRF / loopback bypass)", () => {
+    expect(() =>
+      resolveEmbedConfig({
+        apiProxyPath: "https://evil.example/api",
+        pageOrigin: "http://127.0.0.1:1",
+      }),
+    ).toThrow(/same-origin path/i);
+    expect(() =>
+      resolveEmbedConfig({
+        apiProxyPath: "//evil.example/api",
+        pageOrigin: "http://127.0.0.1:1",
+      }),
+    ).toThrow(/same-origin path/i);
+  });
 });

@@ -92,7 +92,8 @@ Resolved branding: `identityLabel: "TROZBOT robot concierge"`, avatar states `id
 - **Default deny-wide-open:** only `http(s)://127.0.0.1`, `localhost`, `[::1]` (any port) unless `allowedOrigins` lists exact production hosts.
 - Wildcards (`*`) and empty origins are **rejected** at config time.
 - Optional parent→child message: `{ type: "trozbot:setAvatarState", state: "thinking" }` — ignored if `event.origin` fails allowlist.
-- Prefer **direct DOM mount** in the host. Iframe is optional; contract helper: `buildIframePostMessageContract()` in the package. If iframe: host origin must be on allowlist; never `*`.
+- Prefer **direct DOM mount** + callbacks (`onTicketCreated`, `onError`). Iframe is optional; `buildIframePostMessageContract()` documents parent→child only in Phase 1 (no child→parent events emitted yet). If iframe: host origin must be on allowlist; never `*`.
+- `apiProxyPath` must be a **path** (`/api/...`), never an absolute URL.
 
 ## Host reverse-proxy (TROZLANIO)
 

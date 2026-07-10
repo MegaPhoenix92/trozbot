@@ -74,10 +74,14 @@ export function resolveEmbedConfig(
 
   let apiBase: string;
   if (proxy !== null && proxy !== "") {
-    // Same-origin proxy path (relative). Browser fetch accepts path-only base via absolute join.
-    apiBase = proxy.startsWith("http")
-      ? proxy.replace(/\/$/, "")
-      : `${pageOrigin}${proxy.startsWith("/") ? proxy : `/${proxy}`}`;
+    // Same-origin path only — never absolute URLs (would bypass loopback guard).
+    if (/^https?:\/\//i.test(proxy) || proxy.startsWith("//")) {
+      throw new EmbedConfigError(
+        "apiProxyPath must be a same-origin path (e.g. /api), not an absolute URL; use orchestratorBaseUrl for direct loopback",
+      );
+    }
+    const path = proxy.startsWith("/") ? proxy : `/${proxy}`;
+    apiBase = `${pageOrigin}${path}`;
   } else if (options.orchestratorBaseUrl) {
     apiBase = options.orchestratorBaseUrl.replace(/\/$/, "");
     if (!isLoopbackHttpUrl(apiBase) && process.env.ALLOW_PUBLIC_ORCHESTRATOR !== "true") {

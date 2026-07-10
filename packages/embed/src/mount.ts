@@ -154,14 +154,16 @@ export function mountTrozbot(
     setError(null);
     setAvatarState("thinking");
     try {
-      session = await client.startSession(config.correlationId);
+      const next = await client.startSession(config.correlationId);
+      if (destroyed) throw new Error("embed destroyed");
+      session = next;
       setAvatarState("idle");
       refreshSessionUi();
       return session;
     } catch (e) {
-      setAvatarState("idle");
+      if (!destroyed) setAvatarState("idle");
       const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
+      if (!destroyed) setError(msg);
       throw e;
     }
   }
@@ -169,20 +171,22 @@ export function mountTrozbot(
   async function kbRetrieve(
     query: string,
   ): Promise<{ answer: string; grounded: true }> {
+    if (destroyed) throw new Error("embed destroyed");
     if (!session) throw new Error("Start a session first");
     setError(null);
     setAvatarState("listening");
     setAvatarState("thinking");
     try {
       const result = await client.kbRetrieve(session.id, query);
+      if (destroyed) throw new Error("embed destroyed");
       setAvatarState("speaking");
       answerEl.textContent = result.answer;
       setAvatarState("idle");
       return { answer: result.answer, grounded: true };
     } catch (e) {
-      setAvatarState("idle");
+      if (!destroyed) setAvatarState("idle");
       const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
+      if (!destroyed) setError(msg);
       throw e;
     }
   }
@@ -191,11 +195,13 @@ export function mountTrozbot(
     subject: string,
     body: string,
   ): Promise<{ ticketId: string; status: "open" }> {
+    if (destroyed) throw new Error("embed destroyed");
     if (!session) throw new Error("Start a session first");
     setError(null);
     setAvatarState("thinking");
     try {
       const result = await client.createTicket(session.id, subject, body);
+      if (destroyed) throw new Error("embed destroyed");
       setAvatarState("speaking");
       ticketEl.textContent = `Ticket ${result.ticketId} (${result.status})`;
       merged.onTicketCreated?.({
@@ -205,9 +211,9 @@ export function mountTrozbot(
       setAvatarState("idle");
       return { ticketId: result.ticketId, status: "open" };
     } catch (e) {
-      setAvatarState("idle");
+      if (!destroyed) setAvatarState("idle");
       const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
+      if (!destroyed) setError(msg);
       throw e;
     }
   }
@@ -278,7 +284,8 @@ export function buildIframePostMessageContract(): {
 } {
   return {
     parentToChild: ["trozbot:setAvatarState"],
-    childToParent: ["trozbot:ready", "trozbot:ticketCreated", "trozbot:error"],
-    note: "Default origin allowlist is loopback only; set allowedOrigins for production host origins. Never use *.",
+    /** Planned — not emitted by mount yet; parents should use callbacks. */
+    childToParent: [],
+    note: "Default origin allowlist is loopback only; set allowedOrigins for production host origins. Never use *. Prefer DOM mount + callbacks; child→parent postMessage events are not emitted in Phase 1.",
   };
 }

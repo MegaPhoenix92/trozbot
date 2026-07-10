@@ -20,7 +20,23 @@ async function proxy(
   orchestratorUrl: string,
   apiPath: string,
 ): Promise<void> {
-  const target = new URL(apiPath, orchestratorUrl);
+  // Path-only under orchestrator origin (block protocol-relative open proxy / SSRF).
+  if (
+    !apiPath.startsWith("/") ||
+    apiPath.startsWith("//") ||
+    apiPath.includes("://")
+  ) {
+    res.writeHead(400, { "content-type": "application/json" });
+    res.end(JSON.stringify({ error: "invalid_proxy_path" }));
+    return;
+  }
+  const base = new URL(orchestratorUrl);
+  const target = new URL(apiPath, base);
+  if (target.origin !== base.origin) {
+    res.writeHead(400, { "content-type": "application/json" });
+    res.end(JSON.stringify({ error: "proxy_origin_denied" }));
+    return;
+  }
   const chunks: Buffer[] = [];
   for await (const chunk of req) {
     chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
