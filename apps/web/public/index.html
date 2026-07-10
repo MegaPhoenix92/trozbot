@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TROZBOT — Robot Concierge</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="header">
+        <p class="badge" id="identity">TROZBOT robot concierge</p>
+        <h1>Support robot</h1>
+        <p class="sub">
+          Clearly non-human. Answers from the knowledge base and can create
+          tickets. Text path for Wave 2 (voice in Wave 3).
+        </p>
+      </header>
+
+      <section class="robot-panel" aria-label="Robot avatar">
+        <div id="avatar" class="avatar state-idle" data-state="idle" role="img" aria-label="Robot avatar state: idle">
+          <div class="robot-face">
+            <div class="eye left"></div>
+            <div class="eye right"></div>
+            <div class="mouth"></div>
+          </div>
+          <p class="state-label">State: <strong id="stateText">idle</strong></p>
+        </div>
+        <p class="session-line">
+          Session: <code id="sessionId">none</code>
+        </p>
+      </section>
+
+      <section class="controls">
+        <button type="button" id="btnStart" class="primary">Start session</button>
+        <label class="field">
+          <span>Ask the knowledge base</span>
+          <textarea id="query" rows="3" placeholder="e.g. How do I restart the agent after config changes?"></textarea>
+        </label>
+        <button type="button" id="btnAsk" disabled>Get KB answer</button>
+        <label class="field">
+          <span>Ticket subject</span>
+          <input id="ticketSubject" type="text" placeholder="Optional: create ticket if KB is not enough" />
+        </label>
+        <label class="field">
+          <span>Ticket body</span>
+          <textarea id="ticketBody" rows="2" placeholder="Describe the issue and steps tried"></textarea>
+        </label>
+        <button type="button" id="btnTicket" disabled>Create ticket</button>
+      </section>
+
+      <section class="output" aria-live="polite">
+        <h2>Robot response</h2>
+        <pre id="answer">—</pre>
+        <p id="ticketResult" class="muted">—</p>
+        <p id="error" class="error" hidden></p>
+      </section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
