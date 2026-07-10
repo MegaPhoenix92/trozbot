@@ -1,0 +1,36 @@
+{
+  "name": "@trozbot/embed",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "demo-host.html"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/copy-demo.mjs && node scripts/bundle-browser.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "dev": "tsx src/demo-server.ts",
+    "start": "node dist/demo-server.js"
+  },
+  "dependencies": {
+    "@trozbot/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "esbuild": "^0.28.1",
+    "happy-dom": "^15.11.7",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}

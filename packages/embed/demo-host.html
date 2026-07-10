@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TROZBOT embed host fixture</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 24px;
+        background: #0b1020;
+        color: #e8eefc;
+      }
+      h1 {
+        font-size: 1.25rem;
+      }
+      .hint {
+        opacity: 0.8;
+        max-width: 52rem;
+        line-height: 1.45;
+      }
+      #mount {
+        margin-top: 16px;
+      }
+      code {
+        background: #1a2236;
+        padding: 0.1em 0.35em;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>TROZBOT embed host (local fixture)</h1>
+    <p class="hint">
+      Simulates a parent app (e.g. TROZLANIO) mounting the robot via
+      <code>mountTrozbot</code>. Uses same-origin <code>/api</code> proxy to the
+      orchestrator. Production hosts must place this behind existing app auth —
+      the embed does not implement SSO.
+    </p>
+    <div id="mount"></div>
+    <script type="module">
+      import { mountTrozbot } from "/dist/trozbot-embed.browser.js";
+
+      window.__TROZBOT__ = {
+        apiProxyPath: "/api",
+        theme: "dark",
+        correlationId: "embed-host-fixture",
+      };
+
+      const handle = mountTrozbot(document.getElementById("mount"), {
+        apiProxyPath: "/api",
+        theme: "dark",
+        correlationId: "embed-host-fixture",
+        onTicketCreated: (t) => console.log("ticket", t),
+        onError: (e) => console.error("embed error", e),
+      });
+
+      window.__trozbotHandle = handle;
+    </script>
+  </body>
+</html>
