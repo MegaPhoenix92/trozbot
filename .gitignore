@@ -32,3 +32,9 @@ coverage/
 .pnpm-debug.log*
 npm-debug.log*
 yarn-error.log*
+
+# Agent instruction files (local only — not published on public repo)
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+.clinerules*
