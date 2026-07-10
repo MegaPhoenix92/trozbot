@@ -12,9 +12,16 @@ export function isLoopbackHost(host: string): boolean {
   return LOOPBACK.has(h);
 }
 
-export function resolveBindHost(
-  env: NodeJS.ProcessEnv = process.env,
-): string {
+export type EnvMap = Record<string, string | undefined>;
+
+function readProcessEnv(): EnvMap {
+  // Avoid depending on @types/node in packages/core for library build.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const g = globalThis as { process?: { env?: EnvMap } };
+  return g.process?.env ?? {};
+}
+
+export function resolveBindHost(env: EnvMap = readProcessEnv()): string {
   const requested = (env.HOST ?? env.BIND_HOST ?? DEFAULT_BIND_HOST).trim();
   const host = requested.length > 0 ? requested : DEFAULT_BIND_HOST;
 

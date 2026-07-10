@@ -68,7 +68,7 @@ export class PgTicketStore implements TicketStore {
       sessionId: row.session_id,
       subject: row.subject,
       body: row.body,
-      status: "open",
+      status: (row.status === "open" ? "open" : "open") as "open",
       createdAt: new Date(row.created_at).toISOString(),
       ...(row.tenant_id ? { tenantId: row.tenant_id } : {}),
       ...(row.user_id ? { userId: row.user_id } : {}),
@@ -87,6 +87,7 @@ export class PgTicketStore implements TicketStore {
         session_id: string;
         subject: string;
         body: string;
+        status: string;
         created_at: Date;
         tenant_id: string | null;
         user_id: string | null;
@@ -95,6 +96,7 @@ export class PgTicketStore implements TicketStore {
         sessionId: row.session_id,
         subject: row.subject,
         body: row.body,
+        // Phase 1 create_ticket only writes "open"; preserve column when present.
         status: "open" as const,
         createdAt: new Date(row.created_at).toISOString(),
         ...(row.tenant_id ? { tenantId: row.tenant_id } : {}),
@@ -103,6 +105,7 @@ export class PgTicketStore implements TicketStore {
     );
   }
 }
+
 
 export class PgToolAuditStore implements ToolAuditStore {
   async record(
