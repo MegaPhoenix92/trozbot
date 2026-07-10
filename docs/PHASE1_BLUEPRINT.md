@@ -7,6 +7,30 @@
 
 ---
 
+## Current status (read first)
+
+**This document is the product mission and planned architecture.**  
+It is **not** the evidence ledger.
+
+| Layer | Where to look |
+|-------|----------------|
+| **What is proven today** | [`docs/PHASE1_STATUS.md`](./PHASE1_STATUS.md) |
+| **How agents run `/goal`** | [`docs/GOAL_LOOP.md`](./GOAL_LOOP.md) |
+| **Hard constraints** | [`docs/DO_NOT.md`](./DO_NOT.md) |
+
+Distinguish carefully:
+
+| Term | Meaning |
+|------|---------|
+| **Planned success criteria** | The seven bullets below — **targets** |
+| **Shipped code** | Merged on main (see status ledger) |
+| **Local evidence** | Tests / loopback demo |
+| **Owner-operated production evidence** | Live DB, cluster, registry, vendor keys |
+
+**As of D1 reconciliation:** Phase 1 **code spine** is shipped with local and host-integration proof on many paths. **Not all** planned success criteria are LIVE/PRODUCTION PROVEN: voice remains a **stub** (not real STT/TTS), live K8s apply is unproven, and cosign/registry/admission remain **owner-blocked**.
+
+---
+
 ## Goal (Phase 1)
 
 Ship a **real-time voice support agent** inside the app:
@@ -126,15 +150,17 @@ Start small: CI does scans + sign; cluster enforces verify. Expand policies as s
 
 ## Success criteria (Phase 1 done when)
 
+> **Target criteria** (not all LIVE/PRODUCTION PROVEN — see [`PHASE1_STATUS.md`](./PHASE1_STATUS.md)).
+
 A real user session can:
 
-1. Open the robot concierge (non-human avatar)
-2. Speak a software support issue
-3. Receive a **helpful answer grounded in the knowledge base**
-4. Create a **support ticket** if needed
-5. Complete 1–4 in a **single continuous session**
-6. Run the slice on the **K8s cluster** with health checks + logging
-7. Pass the **security baseline** on images used in that deploy
+1. Open the robot concierge (non-human avatar) — **local + host UI shipped**
+2. Speak a software support issue — **stub voice only**; real STT **not shipped**
+3. Receive a **helpful answer grounded in the knowledge base** — **local proven** (fixture KB)
+4. Create a **support ticket** if needed — **local + host-attribution proven**
+5. Complete 1–4 in a **single continuous session** — **local text path proven**; full voice E2E production **not**
+6. Run the slice on the **K8s cluster** with health checks + logging — **manifests shipped**; **live apply owner-blocked**
+7. Pass the **security baseline** on images used in that deploy — **CI scans/SBOM shipped**; **sign + admission owner-blocked**
 
 ---
 
@@ -160,24 +186,28 @@ TROZBOT is **agentic software** and an **agentic product workspace**:
 
 See:
 
-- `AGENTS.md` — single source of truth for every agent
-- `docs/AGENTIC_OPERATING_MODEL.md` — loops, lanes, merge gates
+- `docs/GOAL_LOOP.md` — `/goal` outer/inner doctrine (public)
+- `docs/AGENTIC_OPERATING_MODEL.md` — lineages, gates, final review refresh
 - `docs/DO_NOT.md` — hard constraints
+- `docs/PHASE1_STATUS.md` — current evidence
 
-**Not Fable-only:** any lineage may build, review, or run a `/goal` lane if it follows `AGENTS.md` and the security merge gate.
+Local agent overlays may exist in a private checkout; they are not published in this public repo.
+
+**Not Fable-only:** any lineage may build, review, or run a `/goal` lane if it follows the public docs contract and the security merge gate.
 
 ---
 
-## Implementation waves (suggested)
+## Implementation waves (evidence-aware)
 
-| Wave | Outcome |
-|------|---------|
-| **0 — Repo spine** | Blueprint, AGENTS.md, folder skeleton, CI security stubs, shared-DB ADR |
-| **1 — Vertical slice local** | Orchestrator + mock voice path + KB retrieve + create_ticket against shared DB schema |
-| **2 — Robot UI** | Avatar states + session wiring in embed host |
-| **3 — Real voice gateway** | STT/TTS path; one production-like session |
-| **4 — K8s thin deploy** | Deployments, ingress, secrets, probes, logs |
-| **5 — Supply chain** | Full scan + SBOM + sign + admission verify green |
+| Wave | Planned outcome | Evidence status (see PHASE1_STATUS) |
+|------|-----------------|-------------------------------------|
+| **0 — Repo spine** | Blueprint, docs, folder skeleton, CI stubs, shared-DB ADR | **SHIPPED** |
+| **1 — Vertical slice local** | Orchestrator + KB + create_ticket (+ schema) | **SHIPPED** + **LOCALLY PROVEN** (Postgres optional) |
+| **2 — Robot UI** | Avatar states + session wire | **SHIPPED** + **LOCALLY PROVEN** |
+| **3 — Voice gateway** | STT/TTS path | **SHIPPED as stub** — **NOT** real STT/TTS |
+| **4 — K8s thin deploy** | Deployments, probes, limits | **Manifests SHIPPED**; live cluster **OWNER-BLOCKED** |
+| **5 — Supply chain** | Scan + SBOM + sign + admission | **CI scan/SBOM SHIPPED**; sign/registry/admission **OWNER-BLOCKED** |
+| **Host embed** | TROZLANIO mount + proxy | **HOST-INTEGRATION PROVEN** (sibling monorepo) |
 
 Stop and reassess after Wave 1–2 if the shell feels wrong; expand automation only after the shell is good.
 
@@ -204,6 +234,7 @@ KB answers + create_ticket, single session, non-human character only.
 Deploy: thin K8s (GKE-class), managed Redis, SHARED Postgres with TROZLANIO
 (schema trozbot). Security day one: image/dep/secrets/Dockerfile scan, SBOM,
 signed images, admission verify. No risky automation; read-only + ticket only.
-All agent lineages (claude/fable, codex, grok, hermes) may build/review under AGENTS.md.
+All agent lineages (claude/fable, codex, grok, hermes) may build/review under docs/GOAL_LOOP.md + AGENTIC_OPERATING_MODEL.
 Do not invent a separate product DB. Do not over-microservice. Ship the slice.
+Current evidence: docs/PHASE1_STATUS.md (do not claim production voice/cluster without proof).
 ```

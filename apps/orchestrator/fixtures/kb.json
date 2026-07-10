@@ -34,5 +34,23 @@
     "title": "Support session basics",
     "body": "Each robot session has an id and avatar states idle, listening, thinking, and speaking. Start a session before asking the knowledge base or creating a ticket. Sessions are local demo state unless wired to durable storage.",
     "tags": ["session", "avatar", "idle", "listening", "thinking", "speaking"]
+  },
+  {
+    "id": "kb-goal-loop",
+    "title": "How the agent /goal loop works",
+    "body": "/goal is a persistent multi-lineage build contract with an objective, bounded scope, hard DO-NOT rules, acceptance evidence, a non-builder review gate, and an explicit STOP condition. The outer orchestrator owns sequencing and may self-chain the next issue and PR only when authorized. A builder implements one bounded wave, reports exact evidence, receives zero review votes, and stops. CI must be green, but security-shaped work also requires primary-source review. Work stops when acceptance is merged or an owner-only blocker such as credentials, database access, a cluster, registry, or vendor key is reached.",
+    "tags": [
+      "goal",
+      "/goal",
+      "agent",
+      "agentic",
+      "orchestrator",
+      "builder",
+      "review",
+      "merge",
+      "stop",
+      "self-chain",
+      "workflow"
+    ]
   }
 ]

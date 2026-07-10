@@ -1,25 +1,51 @@
 # TROZBOT
 
-**Robot voice support concierge** for TROZLANIO — clearly non-human, knowledge-base answers, ticket creation, Kubernetes from day one.
+**Robot support concierge** for TROZLANIO — clearly **non-human**, knowledge-base answers, ticket creation, Kubernetes-from-day-one **discipline**.
 
 | | |
 |--|--|
 | **GitHub** | https://github.com/MegaPhoenix92/trozbot |
 | **Local** | `TROZLAN/TROZLANIO/trozbot` |
-| **DB** | **Shared with TROZLANIO** (schema-isolated `trozbot`) |
+| **DB** | **Shared with TROZLANIO** (schema-isolated `trozbot`) when `DATABASE_URL` is set |
+| **Current evidence** | [`docs/PHASE1_STATUS.md`](./docs/PHASE1_STATUS.md) |
 | **Phase 1 blueprint** | [`docs/PHASE1_BLUEPRINT.md`](./docs/PHASE1_BLUEPRINT.md) |
 
-## Phase 1 in one line
+## Status (honest)
+
+**Phase 1 code spine shipped** — local vertical slice, embed package, thin K8s manifests, supply-chain CI path, and TROZLANIO host integration (sibling monorepo).  
+
+**Production completion still has explicit owner-operated blockers:** real STT/TTS vendor keys, live cluster apply, registry push, cosign signing, admission verify, and production shared-DB credentials. See the evidence ledger.
+
+## Phase 1 in one line (target)
 
 > Robot pops up → user speaks → KB-grounded answer → create ticket if needed → one session → thin K8s + security baseline.
 
+**Voice note:** current media path is a **stub**; real STT/TTS is **not shipped**.
+
+## Public docs (start here)
+
+| Doc | Purpose |
+|-----|---------|
+| [`docs/PHASE1_STATUS.md`](./docs/PHASE1_STATUS.md) | **Evidence ledger** — shipped vs proven vs blocked |
+| [`docs/PHASE1_BLUEPRINT.md`](./docs/PHASE1_BLUEPRINT.md) | Mission + architecture + planned success criteria |
+| [`docs/GOAL_LOOP.md`](./docs/GOAL_LOOP.md) | `/goal` outer/inner loop, STOP, self-chain |
+| [`docs/AGENTIC_OPERATING_MODEL.md`](./docs/AGENTIC_OPERATING_MODEL.md) | Multi-lineage rules + review gates |
+| [`docs/DO_NOT.md`](./docs/DO_NOT.md) | Hard constraints |
+| [`docs/DEMO.md`](./docs/DEMO.md) | Local three-terminal demo |
+| [`docs/EMBED.md`](./docs/EMBED.md) | Embed package + TROZLANIO host mount |
+| [`docs/SUPPLY_CHAIN.md`](./docs/SUPPLY_CHAIN.md) | Scans, SBOM, owner-gated sign/registry |
+
+Local agent entrypoint files (for example `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.clinerules*`) may exist in a **developer checkout** but are **not published** in the public repository. Public operating contracts live under **`docs/`**.
+
 ## Demo (Phase 1 local)
 
-→ **[`docs/DEMO.md`](./docs/DEMO.md)** — three terminals, curl smoke, bind/DB notes.
+→ **[`docs/DEMO.md`](./docs/DEMO.md)** — three terminals, curl smoke, bind/DB notes.  
 
-## Embed in a host app (TROZLANIO path)
+Local demo is **unauthenticated** and **loopback-only**. TROZLANIO host smoke is **authenticated** and **rollout-gated** (see EMBED).
 
-→ **[`docs/EMBED.md`](./docs/EMBED.md)** — `mountTrozbot` / `destroy`, origin allowlist, proxy notes.
+## Embed + TROZLANIO host
+
+→ **[`docs/EMBED.md`](./docs/EMBED.md)** — `mountTrozbot` / `destroy`, fixture host, and live TROZLANIO page/proxy contract.
 
 ```bash
 pnpm dev:orchestrator   # :8787
@@ -31,61 +57,30 @@ pnpm dev:embed          # :8791 fixture host → http://127.0.0.1:8791/
 Requires **Node ≥ 20** and **pnpm** (9.x).
 
 ```bash
-# Install workspace
 pnpm install
-
-# Build + typecheck + unit tests
 pnpm build
 pnpm typecheck
 pnpm test
-
-# Migration dry-run (no DATABASE_URL required)
 pnpm --filter @trozbot/orchestrator migrate:dry-run
 
 # Terminal A — orchestrator
-pnpm dev:orchestrator
-# Health: curl -s http://127.0.0.1:8787/health
+pnpm dev:orchestrator   # http://127.0.0.1:8787/health
 
-# Terminal B — robot UI (Wave 2)
-pnpm dev:web
-# → http://127.0.0.1:5173  (clearly non-human robot avatar + session wire)
+# Terminal B — robot UI
+pnpm dev:web            # http://127.0.0.1:5173
 
-# Terminal C — voice gateway (Wave 3; stub STT/TTS without API keys)
-pnpm dev:voice
-# → http://127.0.0.1:8790/health
-```
-
-### Manual smoke (optional)
-
-```bash
-# Start session
-curl -s -X POST http://127.0.0.1:8787/sessions \
-  -H 'content-type: application/json' \
-  -d '{"correlationId":"local"}' | jq .
-
-# KB retrieve + create_ticket — use session id from above
-# curl -s -X POST http://127.0.0.1:8787/sessions/<SESSION_ID>/tools ...
+# Terminal C — voice gateway (stub STT/TTS; not production voice)
+pnpm dev:voice          # http://127.0.0.1:8790/health
 ```
 
 ### Database
 
-Wave 1 ships **expand-only** SQL under `apps/orchestrator/migrations/` for schema `trozbot` (`tickets`, `tool_calls`). Apply path is documented in [`apps/orchestrator/migrations/README.md`](./apps/orchestrator/migrations/README.md).
+Expand-only SQL under `apps/orchestrator/migrations/` for schema `trozbot`.
 
-- If `DATABASE_URL` is **unset** (default for local/CI): tickets + audit use **in-memory** stores; live migration apply is **skipped** and reported by `migrate:dry-run`.
-- Do **not** invent or commit production credentials.
+- **`DATABASE_URL` unset** (default local/CI): in-memory tickets + audit; live apply skipped (`migrate:dry-run` reports SKIP).
+- **`DATABASE_URL` set**: optional shared TROZLANIO Postgres path. Never commit real credentials.
 
 Copy [`.env.example`](./.env.example) for local env vars only.
-
-## Multi-agent (all lineages)
-
-This is **not** a Fable-only loop. Claude/Fable, Codex, Grok, and Hermes all build and review under one contract:
-
-| Doc | Purpose |
-|-----|---------|
-| [`AGENTS.md`](./AGENTS.md) | **Start here** — every agent |
-| [`docs/AGENTIC_OPERATING_MODEL.md`](./docs/AGENTIC_OPERATING_MODEL.md) | Consult → build → cross-review; `/goal` lanes |
-| [`docs/DO_NOT.md`](./docs/DO_NOT.md) | Hard constraints |
-| [`CLAUDE.md`](./CLAUDE.md) / [`GEMINI.md`](./GEMINI.md) | Lineage entrypoints → AGENTS.md |
 
 ## Architecture (thin)
 
@@ -93,39 +88,44 @@ This is **not** a Fable-only loop. Claude/Fable, Codex, Grok, and Hermes all bui
 Robot UI (idle|listening|thinking|speaking)
         │
         ▼
- Voice Gateway  ──▶  AI Orchestrator  ──▶  KB + create_ticket
-                            │
-                     Redis + shared Postgres (TROZLANIO)
+ Voice Gateway (stub)  ──▶  AI Orchestrator  ──▶  KB + create_ticket
+                                │
+                     optional shared Postgres (TROZLANIO)
 ```
 
-Security day one path: image scan · SBOM · deps · secrets · Dockerfile · **sign images** · **admission verify**.
+Phase 1 tools: **`kb_retrieve`** (read) · **`create_ticket`** (write only).
+
+Supply chain path (CI): image scan · SBOM · deps · secrets · Dockerfile.  
+**Image registry push, cosign signing, and admission verify remain owner-blocked** — not claimed green without keys/cluster.
 
 ## Layout
 
 ```text
 apps/web            robot UI
-apps/voice-gateway  live audio (stub)
+apps/voice-gateway  stub STT/TTS + session tools
 apps/orchestrator   AI tools + policy
 packages/core       shared contracts
-packages/embed      host mount API (TROZLANIO path)
+packages/embed      host mount API
 deploy/k8s          thin cluster manifests
-docs/               blueprint, DEMO, EMBED, ADRs
+docs/               blueprint, status ledger, DEMO, EMBED, ADRs
 ```
 
-## Status
+## Wave summary (code spine)
 
-**Wave 1** — orchestrator + core contracts + migrations (shipped).  
-**Wave 2** — robot UI (`apps/web`) avatar states + session wire (text path).  
-**Wave 3** — voice gateway stub STT/TTS + session tools (keys optional; interim stub documented).  
-**Wave 4** — thin K8s manifests (`deploy/k8s`, client kustomize validate).  
-**Wave 5** — supply chain CI (gitleaks, audit, hadolint, SBOM, trivy); cosign/registry owner-gated — see [`docs/SUPPLY_CHAIN.md`](./docs/SUPPLY_CHAIN.md).  
+| Wave | Outcome |
+|------|---------|
+| 1 | Orchestrator + core + migrations |
+| 2 | Robot UI avatar states + session wire |
+| 3 | Voice gateway **stub** |
+| 4 | Thin K8s manifests (client validate) |
+| 5 | Supply-chain CI; cosign/registry owner-gated |
+| Hardening | Bind guard, DB-optional, honest KB miss |
+| Embed + host | Package + TROZLANIO mount (sibling) |
 
-**Hardening** — loopback bind guard (`ALLOW_PUBLIC_BIND`); DB-optional tickets/audit (`DATABASE_URL`); honest KB miss; UI empty/error/no-hit polish. Local demo stays unauthenticated.  
-**Embed** — `@trozbot/embed` mount/destroy + origin allowlist + local fixture host (`docs/EMBED.md`).  
-**TROZLANIO host** — optional page + `/api/trozbot` proxy in the platform monorepo (does not replace GlobalTrozBot); see `docs/EMBED.md` → TROZLANIO host mount.
+Details and proof levels: [`docs/PHASE1_STATUS.md`](./docs/PHASE1_STATUS.md).
 
 ## Related
 
-- **TROZLANIO** — platform core + shared DB  
+- **TROZLANIO** — platform core + shared DB + host page  
 - **TROZLANCOM** — legacy embedded TROZBOT surfaces (reference only)  
 - **botsentinel** — sibling product; not this codebase  

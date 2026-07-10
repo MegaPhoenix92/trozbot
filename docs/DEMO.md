@@ -2,6 +2,10 @@
 
 Prove the robot concierge vertical slice on your laptop: **non-human robot UI**, **KB-grounded answer**, **create ticket**, with optional **stub voice** path.
 
+> **Evidence context:** this is the **standalone local demo** (loopback, unauthenticated).  
+> For what is HOST-INTEGRATION vs OWNER-BLOCKED, see [`PHASE1_STATUS.md`](./PHASE1_STATUS.md).  
+> **Stub voice is not production voice.**
+
 | Service | Command | URL |
 |---------|---------|-----|
 | Orchestrator | `pnpm dev:orchestrator` | http://127.0.0.1:8787 |
@@ -264,7 +268,7 @@ curl -s -X POST "http://127.0.0.1:8790/v1/session/$VSID/turn" \
 
 ---
 
-## Optional — embed host fixture (TROZLANIO path)
+## Optional — embed host fixture
 
 Simulates a parent app mounting the robot via `mountTrozbot` (see `docs/EMBED.md`).
 
@@ -278,4 +282,18 @@ Use **Start session → Get KB answer → Create ticket** inside the embed shell
 
 ---
 
-**STOP** — do not require Phase 2, live GKE, or owner registry/cosign keys.
+## Standalone local demo vs TROZLANIO host
+
+| | Local (`docs/DEMO.md`) | TROZLANIO host (`docs/EMBED.md`) |
+|--|------------------------|----------------------------------|
+| Auth | Unauthenticated | `isAuthenticated` + `requireTrozbotAccess` |
+| Bind | Loopback-only by default | Behind platform app |
+| Proxy | Direct to orchestrator or web `/api` | `/api/trozbot` in **server/routes.ts** |
+| Ticket identity | Optional / demo | **Server-derived** tenant/user only |
+| Voice | Stub only | Same orchestrator; not production STT/TTS |
+
+Do not treat a green local demo as live production voice or cluster deploy.
+
+---
+
+**STOP** — do not require Phase 2, live GKE, or owner registry/cosign keys for this demo.

@@ -30,7 +30,7 @@ Hard constraints for every agent lineage (Claude/Fable, Codex, Grok, Hermes, hum
 
 ## Multi-agent process
 
-15. **Do not** treat this as a Fable-only loop — all lineages share `AGENTS.md`.
+15. **Do not** treat this as a Fable-only loop — all lineages share the public docs contract (`docs/GOAL_LOOP.md`, `docs/AGENTIC_OPERATING_MODEL.md`, this file).
 16. **Do not** let the builder self-approve security-shape PRs (auth, tickets, data access, K8s RBAC, signing).
 17. **Do not** merge security-shape changes without ≥2 non-builder lineage reviews + primary-source verify of the load-bearing change.
 18. **Do not** force-push `main` or rewrite published history without owner approval.
