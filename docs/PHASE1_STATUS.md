@@ -56,7 +56,7 @@ Last reconciled: 2026-07-10 (D1 truth + `/goal` loop docs).
 | Image registry push | **OWNER-BLOCKED** | Docs in `SUPPLY_CHAIN.md` | Registry credentials + push path |
 | Cosign signing | **OWNER-BLOCKED** | Documented owner gap | Cosign keys + policy |
 | Admission verification | **OWNER-BLOCKED** | Documented owner gap | Cluster admission install |
-| Open P2 host/embed codes | **HOST-INTEGRATION** partial | TROZLANIO **#3486** | Compatibility until merged/closed |
+| Open P2 host/embed codes (#3486) | **NOT SHIPPED** (open follow-up) | TROZLANIO **#3486** | P2 host/embed error-code compatibility until closed; does not block Phase 1 spine |
 
 ---
 
