@@ -17,6 +17,15 @@ export interface OrchestratorDeps {
   audit: ToolAuditStore;
 }
 
+/**
+ * Server-established identity only. Never populate this object from tool input.
+ * A future authenticated host adapter may map verified TROZLANIO identity here.
+ */
+export interface TrustedToolContext {
+  tenantId?: string;
+  userId?: string;
+}
+
 export class Orchestrator {
   constructor(private readonly deps: OrchestratorDeps) {}
 
@@ -33,6 +42,7 @@ export class Orchestrator {
   async invokeTool(
     sessionId: string,
     body: unknown,
+    trustedContext: TrustedToolContext = {},
   ): Promise<ToolInvokeResponse> {
     const session = this.deps.sessions.get(sessionId);
     if (!session) {
@@ -113,14 +123,20 @@ export class Orchestrator {
         typeof input === "object" && input !== null
           ? (input as Record<string, unknown>)
           : {};
+
+      // Identity is deliberately sourced from trusted server context, never
+      // from caller-controlled tool input. Until a verified host adapter is
+      // wired, these fields remain absent/null in the ticket store.
       const result = await this.deps.tickets.create({
         sessionId,
         subject: typeof base.subject === "string" ? base.subject : "",
         body: typeof base.body === "string" ? base.body : "",
-        ...(typeof base.tenantId === "string"
-          ? { tenantId: base.tenantId }
+        ...(typeof trustedContext?.tenantId === "string"
+          ? { tenantId: trustedContext.tenantId }
           : {}),
-        ...(typeof base.userId === "string" ? { userId: base.userId } : {}),
+        ...(typeof trustedContext?.userId === "string"
+          ? { userId: trustedContext.userId }
+          : {}),
       });
       await this.deps.audit.record({
         sessionId,

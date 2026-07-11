@@ -64,13 +64,18 @@ export type KbRetrieveOutput = z.infer<typeof KbRetrieveOutputSchema>;
 
 // --- create_ticket ---
 
+/**
+ * Internal ticket-store input after the orchestrator has attached session and
+ * verified server context. `tenantId` / `userId` are not authoritative client
+ * tool fields; the orchestrator must source them only from trusted auth context.
+ */
 export const CreateTicketInputSchema = z.object({
   sessionId: SessionIdSchema,
   subject: z.string().min(1).max(200),
   body: z.string().min(1).max(10_000),
-  /** Opaque TROZLANIO tenant reference — do not invent local tenants. */
+  /** Verified opaque TROZLANIO tenant reference; absent until trusted context exists. */
   tenantId: z.string().min(1).max(128).optional(),
-  /** Opaque TROZLANIO user reference — do not invent local users. */
+  /** Verified opaque TROZLANIO user reference; absent until trusted context exists. */
   userId: z.string().min(1).max(128).optional(),
 });
 
