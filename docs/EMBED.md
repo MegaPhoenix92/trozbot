@@ -9,7 +9,9 @@ Mount the Phase 1 **robot concierge** inside a parent application without rewrit
 | Local fixture | `pnpm dev:embed` -> `http://127.0.0.1:8791/` |
 | Tools | only `kb_retrieve` + `create_ticket` |
 | Current evidence | [`PHASE1_STATUS.md`](./PHASE1_STATUS.md) |
-| Production handoff | `https://github.com/MegaPhoenix92/trozlanio/blob/main/docs/TROZBOT_PRODUCTION_RUNBOOK.md` |
+| Production handoff | [TROZBOT production runbook](https://github.com/MegaPhoenix92/trozlanio/blob/main/docs/TROZBOT_PRODUCTION_RUNBOOK.md) |
+
+> **Merge-order gate for this docs PR:** TROZLANIO PR [#3492](https://github.com/MegaPhoenix92/trozlanio/pull/3492) must merge first so the canonical `main`-branch runbook link resolves before this PR lands.
 
 ## Why `packages/embed`
 
@@ -130,9 +132,7 @@ The durable configuration belongs in both TROZLANIO canary and production manife
 - #3489 — canonical tool-error codes
 - #3490 — production 5xx middleware preservation
 
-Complete deployment, database, smoke, observability, and rollback steps live in the TROZLANIO production runbook:
-
-`https://github.com/MegaPhoenix92/trozlanio/blob/main/docs/TROZBOT_PRODUCTION_RUNBOOK.md`
+Complete deployment, database, smoke, observability, and rollback steps live in the [TROZBOT production runbook](https://github.com/MegaPhoenix92/trozlanio/blob/main/docs/TROZBOT_PRODUCTION_RUNBOOK.md).
 
 ---
 
