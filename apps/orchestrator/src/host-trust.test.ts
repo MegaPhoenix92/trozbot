@@ -74,3 +74,27 @@ describe("deriveTrustedToolContextFromHeaders", () => {
     }
   });
 });
+
+  it("rejects whitespace-only trust headers as incomplete/unauthorized", () => {
+    const blankTenant = deriveTrustedToolContextFromHeaders(
+      {
+        [HOST_TOKEN_HEADER]: secret,
+        [HOST_TENANT_HEADER]: "   ",
+        [HOST_USER_HEADER]: "42",
+      },
+      { TROZBOT_HOST_SERVICE_TOKEN: secret },
+    );
+    expect(blankTenant.ok).toBe(false);
+    if (!blankTenant.ok) expect(blankTenant.code).toBe("HOST_CHANNEL_INCOMPLETE");
+
+    const blankToken = deriveTrustedToolContextFromHeaders(
+      {
+        [HOST_TOKEN_HEADER]: "   ",
+        [HOST_TENANT_HEADER]: "7",
+        [HOST_USER_HEADER]: "42",
+      },
+      { TROZBOT_HOST_SERVICE_TOKEN: secret },
+    );
+    expect(blankToken.ok).toBe(false);
+    if (!blankToken.ok) expect(blankToken.code).toBe("HOST_CHANNEL_UNAUTHORIZED");
+  });

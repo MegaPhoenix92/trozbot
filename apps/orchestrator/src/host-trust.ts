@@ -50,6 +50,16 @@ function secretsEqual(a: string, b: string): boolean {
  * - Token mismatch → reject.
  * - Valid token requires non-empty tenant + user strings.
  */
+function rawHeaderPresent(
+  headers: Record<string, string | string[] | undefined>,
+  name: string,
+): boolean {
+  const raw = headers[name] ?? headers[name.toLowerCase()];
+  if (raw === undefined) return false;
+  if (Array.isArray(raw)) return raw.length > 0;
+  return typeof raw === "string";
+}
+
 export function deriveTrustedToolContextFromHeaders(
   headers: Record<string, string | string[] | undefined>,
   env: NodeJS.ProcessEnv = process.env,
@@ -59,8 +69,11 @@ export function deriveTrustedToolContextFromHeaders(
   const tenantId = headerValue(headers, HOST_TENANT_HEADER);
   const userId = headerValue(headers, HOST_USER_HEADER);
 
+  // Detect presence before whitespace-normalization so blank headers fail closed.
   const anyTrustHeader =
-    token !== undefined || tenantId !== undefined || userId !== undefined;
+    rawHeaderPresent(headers, HOST_TOKEN_HEADER) ||
+    rawHeaderPresent(headers, HOST_TENANT_HEADER) ||
+    rawHeaderPresent(headers, HOST_USER_HEADER);
 
   if (!anyTrustHeader) {
     return { ok: true, context: {} };
