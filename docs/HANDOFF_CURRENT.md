@@ -7,7 +7,9 @@
 | Repo | Item | Merge SHA |
 |------|------|-----------|
 | trozbot | #28 host service-token → TrustedToolContext | `c67719a11eb3540381b454b12fd836d0243474d2` |
-| TROZLANIO | #3495 host trust headers (soft-skip if token unset) | `8ae2ef0a87a7f896810517c89e74ff7c76c39a23` |
+| TROZLANIO | #3495 host trust headers (initial) | `8ae2ef0a87a7f896810517c89e74ff7c76c39a23` |
+| TROZLANIO | #3497 strict headers: body non-authoritative + 503 if token unset | `27b610feefafb02b35881363dbba495801f2ee5d` |
+| trozbot | #29 this handoff doc | tip on main |
 | TROZLANIO | #3494 production preflight **HOLD** | `b22d7f2f…` |
 | trozbot | #24 body IDs non-authoritative | earlier |
 
@@ -20,7 +22,7 @@ Body spoof → ignored
 Bad/missing host token on orchestrator → 401 (if headers present)
 ```
 
-Host follow-up (if landed): create_ticket without host token → **503** fail-closed; body has no tenant/user.
+Host **#3497 landed:** create_ticket without host token → **503** fail-closed; body has no tenant/user (headers only).
 
 Env (both sides, never commit values): `TROZBOT_HOST_SERVICE_TOKEN`
 
@@ -32,9 +34,9 @@ Owner still must set matching tokens, DB, image, cluster, cohort.
 
 ## Next pickups (need new owner `/goal`)
 
-1. Land residual host strict headers PR if open (body non-authoritative + 503 when token unset).
-2. Runtime token wiring (ops only; no secrets in git).
-3. Owner-authorized Slice A only after preflight decision table.
+1. Runtime token wiring on canary/prod (ops only; no secrets in git).
+2. Owner-authorized Slice A only after preflight decision table.
+3. Do not re-open #3496 (closed; superseded by #3497).
 
 ## Canonical paths
 
