@@ -73,7 +73,6 @@ describe("deriveTrustedToolContextFromHeaders", () => {
       expect(r.context).toEqual({ tenantId: "7", userId: "42" });
     }
   });
-});
 
   it("rejects whitespace-only trust headers as incomplete/unauthorized", () => {
     const blankTenant = deriveTrustedToolContextFromHeaders(
@@ -98,3 +97,4 @@ describe("deriveTrustedToolContextFromHeaders", () => {
     expect(blankToken.ok).toBe(false);
     if (!blankToken.ok) expect(blankToken.code).toBe("HOST_CHANNEL_UNAUTHORIZED");
   });
+});
