@@ -174,6 +174,171 @@ describe("Wave 1 vertical slice + hardening", () => {
     expect(stored?.userId).toBe("verified-user");
   });
 
+  it("HTTP host trust channel populates IDs; body spoof still ignored", async () => {
+    const secret = "flow-test-host-service-token";
+    const prev = process.env.TROZBOT_HOST_SERVICE_TOKEN;
+    process.env.TROZBOT_HOST_SERVICE_TOKEN = secret;
+    try {
+      const app = await boot();
+      const started = await jsonFetch(base, "/sessions", {
+        method: "POST",
+        body: JSON.stringify({ correlationId: "host-channel" }),
+      });
+      const session = SessionSchema.parse(
+        (started.body as { session: unknown }).session,
+      );
+
+      const ticket = await jsonFetch(base, `/sessions/${session.id}/tools`, {
+        method: "POST",
+        headers: {
+          "x-trozbot-host-token": secret,
+          "x-trozbot-tenant-id": "tenant-host",
+          "x-trozbot-user-id": "user-host",
+        },
+        body: JSON.stringify({
+          tool: "create_ticket",
+          input: {
+            subject: "From host channel",
+            body: "Body spoof must lose.",
+            tenantId: "body-spoof-tenant",
+            userId: "body-spoof-user",
+          },
+        }),
+      });
+      expect(ticket.status).toBe(200);
+      const out = CreateTicketOutputSchema.parse(
+        (ticket.body as { result: unknown }).result,
+      );
+      expect(out.tenantId).toBe("tenant-host");
+      expect(out.userId).toBe("user-host");
+      const stored = await app.tickets.get(out.ticketId);
+      expect(stored?.tenantId).toBe("tenant-host");
+      expect(stored?.userId).toBe("user-host");
+    } finally {
+      if (prev === undefined) delete process.env.TROZBOT_HOST_SERVICE_TOKEN;
+      else process.env.TROZBOT_HOST_SERVICE_TOKEN = prev;
+    }
+  });
+
+  it("HTTP rejects wrong host service token", async () => {
+    const secret = "flow-test-host-service-token";
+    const prev = process.env.TROZBOT_HOST_SERVICE_TOKEN;
+    process.env.TROZBOT_HOST_SERVICE_TOKEN = secret;
+    try {
+      await boot();
+      const started = await jsonFetch(base, "/sessions", {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
+      const session = SessionSchema.parse(
+        (started.body as { session: unknown }).session,
+      );
+      const bad = await jsonFetch(base, `/sessions/${session.id}/tools`, {
+        method: "POST",
+        headers: {
+          "x-trozbot-host-token": "wrong",
+          "x-trozbot-tenant-id": "t",
+          "x-trozbot-user-id": "u",
+        },
+        body: JSON.stringify({
+          tool: "create_ticket",
+          input: { subject: "x", body: "y" },
+        }),
+      });
+      expect(bad.status).toBe(401);
+      expect(
+        (bad.body as { error: { code: string } }).error.code,
+      ).toBe("HOST_CHANNEL_UNAUTHORIZED");
+    } finally {
+      if (prev === undefined) delete process.env.TROZBOT_HOST_SERVICE_TOKEN;
+      else process.env.TROZBOT_HOST_SERVICE_TOKEN = prev;
+    }
+  });
+
+  it("HTTP host channel: verified token sets ticket identity; spoof headers fail closed", async () => {
+    const secret = "flow-test-host-token";
+    const prev = process.env.TROZBOT_HOST_SERVICE_TOKEN;
+    process.env.TROZBOT_HOST_SERVICE_TOKEN = secret;
+    try {
+      const app = await boot();
+      const started = await jsonFetch(base, "/sessions", {
+        method: "POST",
+        body: JSON.stringify({ correlationId: "host-channel" }),
+      });
+      const session = SessionSchema.parse(
+        (started.body as { session: unknown }).session,
+      );
+
+      // Valid host channel + body spoof → stores verified IDs only
+      const okTicket = await jsonFetch(base, `/sessions/${session.id}/tools`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-trozbot-host-token": secret,
+          "x-trozbot-tenant-id": "tenant-7",
+          "x-trozbot-user-id": "user-42",
+        },
+        body: JSON.stringify({
+          tool: "create_ticket",
+          input: {
+            subject: "From host",
+            body: "verified",
+            tenantId: "attacker",
+            userId: "attacker",
+          },
+        }),
+      });
+      expect(okTicket.status).toBe(200);
+      const out = CreateTicketOutputSchema.parse(
+        (okTicket.body as { result: unknown }).result,
+      );
+      expect(out.tenantId).toBe("tenant-7");
+      expect(out.userId).toBe("user-42");
+      const stored = await app.tickets.get(out.ticketId);
+      expect(stored?.tenantId).toBe("tenant-7");
+      expect(stored?.userId).toBe("user-42");
+
+      // Forged token rejected
+      const bad = await jsonFetch(base, `/sessions/${session.id}/tools`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-trozbot-host-token": "forged",
+          "x-trozbot-tenant-id": "x",
+          "x-trozbot-user-id": "y",
+        },
+        body: JSON.stringify({
+          tool: "create_ticket",
+          input: { subject: "x", body: "y" },
+        }),
+      });
+      expect(bad.status).toBe(401);
+      expect(
+        (bad.body as { error: { code: string } }).error.code,
+      ).toBe("HOST_CHANNEL_UNAUTHORIZED");
+
+      // kb_retrieve still works with host channel (identity unused)
+      const kb = await jsonFetch(base, `/sessions/${session.id}/tools`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-trozbot-host-token": secret,
+          "x-trozbot-tenant-id": "tenant-7",
+          "x-trozbot-user-id": "user-42",
+        },
+        body: JSON.stringify({
+          tool: "kb_retrieve",
+          input: { query: "how do I restart the agent after config changes?" },
+        }),
+      });
+      expect(kb.status).toBe(200);
+      expect((kb.body as { ok: boolean }).ok).toBe(true);
+    } finally {
+      if (prev === undefined) delete process.env.TROZBOT_HOST_SERVICE_TOKEN;
+      else process.env.TROZBOT_HOST_SERVICE_TOKEN = prev;
+    }
+  });
+
   it("malformed JSON returns 400 INVALID_JSON not 500", async () => {
     await boot();
     const res = await fetch(`${base}/sessions`, {

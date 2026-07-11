@@ -26,3 +26,11 @@ Wave 1 must ship expand-only migrations and a local runnable `create_ticket` pat
 - A client cannot select another tenant/user by placing identity fields in the `create_ticket` JSON body.
 - The public HTTP path does not invent authentication or identity headers.
 - A later ADR may define verified host identity propagation, tighten foreign keys, or switch to TROZLANIO’s native ticketing surface. That is explicit expand/migrate work, not a product database split.
+
+## Decision addendum (host channel)
+
+**TrustedToolContext over HTTP** is populated only via host service-token headers
+(`X-Trozbot-Host-Token`, `X-Trozbot-Tenant-Id`, `X-Trozbot-User-Id`) when
+`TROZBOT_HOST_SERVICE_TOKEN` matches. Client-supplied trust headers without a
+valid secret are rejected. Tool body `tenantId`/`userId` remain non-authoritative.
+
