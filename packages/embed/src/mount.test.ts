@@ -115,7 +115,9 @@ describe("mountTrozbot", () => {
     const kb = await handle.kbRetrieve(
       "how do I restart the agent after config changes?",
     );
+    expect(kb.hit).toBe(true);
     expect(kb.grounded).toBe(true);
+    expect(kb.sources[0]?.id).toBe("kb-restart-agent");
     expect(kb.answer.toLowerCase()).toMatch(/restart/);
 
     const ticket = await handle.createTicket(
@@ -127,6 +129,51 @@ describe("mountTrozbot", () => {
     expect(onTicket).toHaveBeenCalledWith(
       expect.objectContaining({ ticketId, subject: "Embed ticket" }),
     );
+
+    handle.destroy();
+    host.remove();
+  });
+
+  it("preserves honest KB miss metadata through the programmatic handle", async () => {
+    const sessionId = "33333333-3333-4333-8333-333333333333";
+    const fetchImpl = mockFetchSequence([
+      () => ({
+        session: {
+          id: sessionId,
+          avatarState: "idle",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          correlationId: "embed-miss-test",
+        },
+      }),
+      () => ({
+        ok: true,
+        tool: "kb_retrieve",
+        result: {
+          answer: "I did not find a matching knowledge base article.",
+          sources: [],
+          grounded: false,
+          hit: false,
+        },
+      }),
+    ]);
+
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const handle = mountTrozbot(host, {
+      orchestratorBaseUrl: "http://127.0.0.1:8787",
+      pageOrigin: "http://127.0.0.1:8791",
+      fetchImpl,
+      correlationId: "embed-miss-test",
+    });
+
+    await handle.startSession();
+    const kb = await handle.kbRetrieve("unmatched quantum widget 99999");
+
+    expect(kb.hit).toBe(false);
+    expect(kb.grounded).toBe(false);
+    expect(kb.sources).toEqual([]);
+    expect(kb.answer.toLowerCase()).toMatch(/did not find/);
 
     handle.destroy();
     host.remove();
