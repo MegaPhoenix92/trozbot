@@ -1,5 +1,6 @@
 import http from "node:http";
 import type { Orchestrator } from "./orchestrator.js";
+import { deriveTrustedToolContextFromHeaders } from "./host-trust.js";
 
 export interface HealthBody {
   ok: true;
@@ -65,6 +66,7 @@ function corsHeaders(req: http.IncomingMessage): Record<string, string> {
     return {
       "access-control-allow-origin": origin,
       "access-control-allow-methods": "GET, POST, OPTIONS",
+      // Do not allow browser CORS to carry host trust headers.
       "access-control-allow-headers": "content-type",
       vary: "Origin",
     };
@@ -126,7 +128,26 @@ export function createServer(orchestrator: Orchestrator): http.Server {
       if (method === "POST" && toolMatch) {
         const sessionId = toolMatch[1]!;
         const body = await readJson(req);
-        const result = await orchestrator.invokeTool(sessionId, body);
+        const trust = deriveTrustedToolContextFromHeaders(
+          req.headers as Record<string, string | string[] | undefined>,
+        );
+        if (!trust.ok) {
+          sendJson(
+            res,
+            trust.status,
+            {
+              ok: false,
+              error: { code: trust.code, message: trust.message },
+            },
+            req,
+          );
+          return;
+        }
+        const result = await orchestrator.invokeTool(
+          sessionId,
+          body,
+          trust.context,
+        );
         const status = result.ok
           ? 200
           : result.error.code === "SESSION_NOT_FOUND"

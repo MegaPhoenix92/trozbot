@@ -19,7 +19,8 @@ export interface OrchestratorDeps {
 
 /**
  * Server-established identity only. Never populate this object from tool input.
- * A future authenticated host adapter may map verified TROZLANIO identity here.
+ * HTTP path: populated only via host trust channel (see host-trust.ts).
+ * Direct in-process callers may pass context for tests / internal adapters.
  */
 export interface TrustedToolContext {
   tenantId?: string;
@@ -125,8 +126,8 @@ export class Orchestrator {
           : {};
 
       // Identity is deliberately sourced from trusted server context, never
-      // from caller-controlled tool input. Until a verified host adapter is
-      // wired, these fields remain absent/null in the ticket store.
+      // from caller-controlled tool input. HTTP hosts must use the trust
+      // channel (token + identity headers); body fields are ignored.
       const result = await this.deps.tickets.create({
         sessionId,
         subject: typeof base.subject === "string" ? base.subject : "",

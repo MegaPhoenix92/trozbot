@@ -85,13 +85,13 @@ The host upstream is set only by environment. Non-loopback origins, including Ku
 
 ### Trusted `create_ticket` identity
 
-Host (TROZLANIO #3485) and standalone orchestrator must **both** cooperate:
+End-to-end dual boundary (body never authoritative):
 
-- **Host proxy:** caller `tenantId`, `userId`, and forged `sessionId` are stripped; server injects authenticated tenant/user into the tool body before upstream fetch.
-- **Standalone orchestrator:** ticket storage reads identity **only** from server-side `TrustedToolContext`, never from tool input body fields (see #24 / #18). Spoofed body IDs are ignored.
-- Until a verified host→orchestrator adapter maps host identity into `TrustedToolContext`, durable tickets may store **no** tenant/user even when the host rewrote the body (fail-closed).
-- Missing host trusted context fails closed before fetch on the host path.
-- `kb_retrieve` does not inherit forged identity fields.
+1. **Host (TROZLANIO):** after `isAuthenticated` + `requireTrozbotAccess`, strip client body `tenantId`/`userId`, inject server context into the tool body (defense-in-depth only), and send server-to-server headers:
+   - `X-Trozbot-Host-Token: <TROZBOT_HOST_SERVICE_TOKEN>`
+   - `X-Trozbot-Tenant-Id` / `X-Trozbot-User-Id` from the authenticated session
+2. **Standalone orchestrator:** populates `TrustedToolContext` only when the host token matches `TROZBOT_HOST_SERVICE_TOKEN` (timing-safe). Tool body identity fields are ignored (#24). Missing/invalid channel → no durable IDs or 401.
+3. Browsers must never receive the host service token. Do not allow CORS for trust headers.
 
 
 ### Tool error compatibility
