@@ -9,7 +9,9 @@
 | **DB** | Shared with TROZLANIO (schema-isolated `trozbot`) when `DATABASE_URL` is set |
 | **Current evidence** | [`docs/PHASE1_STATUS.md`](./docs/PHASE1_STATUS.md) |
 | **Phase 1 blueprint** | [`docs/PHASE1_BLUEPRINT.md`](./docs/PHASE1_BLUEPRINT.md) |
-| **Production handoff** | `https://github.com/MegaPhoenix92/trozlanio/blob/main/docs/TROZBOT_PRODUCTION_RUNBOOK.md` |
+| **Production handoff** | [TROZBOT production runbook](https://github.com/MegaPhoenix92/trozlanio/blob/main/docs/TROZBOT_PRODUCTION_RUNBOOK.md) |
+
+> **Cross-repository merge gate for this docs PR:** merge TROZLANIO PR [#3492](https://github.com/MegaPhoenix92/trozlanio/pull/3492) first so the canonical `main`-branch production-runbook link above exists before this PR lands.
 
 ## Status (honest)
 
@@ -60,7 +62,7 @@ pnpm dev:embed          # :8791 fixture host -> http://127.0.0.1:8791/
 
 The canonical production operator path lives with the host platform:
 
-`https://github.com/MegaPhoenix92/trozlanio/blob/main/docs/TROZBOT_PRODUCTION_RUNBOOK.md`
+[TROZBOT production runbook](https://github.com/MegaPhoenix92/trozlanio/blob/main/docs/TROZBOT_PRODUCTION_RUNBOOK.md)
 
 It covers:
 
