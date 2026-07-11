@@ -102,8 +102,8 @@ describe("Wave 1 vertical slice + hardening", () => {
         input: {
           subject: "Agent still failing after restart",
           body: "Tried KB restart steps; still 502.",
-          tenantId: "tenant-demo",
-          userId: "user-demo",
+          tenantId: "attacker-selected-tenant",
+          userId: "attacker-selected-user",
         },
       }),
     });
@@ -112,8 +112,12 @@ describe("Wave 1 vertical slice + hardening", () => {
       (ticket.body as { result: unknown }).result,
     );
     expect(ticketResult.status).toBe("open");
+    expect(ticketResult.tenantId).toBeUndefined();
+    expect(ticketResult.userId).toBeUndefined();
     const stored = await app.tickets.get(ticketResult.ticketId);
     expect(stored?.sessionId).toBe(session.id);
+    expect(stored?.tenantId).toBeUndefined();
+    expect(stored?.userId).toBeUndefined();
 
     const denied = await jsonFetch(base, `/sessions/${session.id}/tools`, {
       method: "POST",
@@ -134,6 +138,40 @@ describe("Wave 1 vertical slice + hardening", () => {
     expect(
       audit.some((e) => e.toolName === "reset_password" && e.status === "denied"),
     ).toBe(true);
+  });
+
+  it("populates ticket identity only from trusted server context", async () => {
+    const app = await boot();
+    const session = app.orchestrator.startSession({
+      correlationId: "trusted-context-test",
+    }).session;
+
+    const result = await app.orchestrator.invokeTool(
+      session.id,
+      {
+        tool: "create_ticket",
+        input: {
+          subject: "Trusted identity ticket",
+          body: "Identity must come from server context.",
+          tenantId: "spoofed-tenant",
+          userId: "spoofed-user",
+        },
+      },
+      {
+        tenantId: "verified-tenant",
+        userId: "verified-user",
+      },
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.error.message);
+    const output = CreateTicketOutputSchema.parse(result.result);
+    expect(output.tenantId).toBe("verified-tenant");
+    expect(output.userId).toBe("verified-user");
+
+    const stored = await app.tickets.get(output.ticketId);
+    expect(stored?.tenantId).toBe("verified-tenant");
+    expect(stored?.userId).toBe("verified-user");
   });
 
   it("malformed JSON returns 400 INVALID_JSON not 500", async () => {

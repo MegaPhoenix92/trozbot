@@ -36,7 +36,7 @@ Never collapse **SHIPPED CODE** or production-config tests into **LIVE / PRODUCT
 | Session lifecycle | **SHIPPED CODE** + **LOCALLY PROVEN** | `POST /sessions`; flow tests | Durable session store optional |
 | KB hit | **SHIPPED CODE** + **LOCALLY PROVEN** | `fixtures/kb.json`; `kb-retrieve.test.ts`; flow | Fixture KB, not production corpus |
 | Honest KB miss | **SHIPPED CODE** + **LOCALLY PROVEN** | `hit:false`, `grounded:false`, empty sources | — |
-| `create_ticket` | **SHIPPED CODE** + **LOCALLY PROVEN** | Tool policy + ticket stores + flow tests | Trusted user/tenant attribution is enforced by the TROZLANIO host path |
+| `create_ticket` | **SHIPPED CODE** + **LOCALLY PROVEN** | Tool policy + ticket stores + flow tests | Host rewrites body (#3485); orchestrator stores IDs only from `TrustedToolContext` (#24). Adapter not wired → tickets may lack tenant/user |
 | In-memory persistence | **SHIPPED CODE** + **LOCALLY PROVEN** | Default when `DATABASE_URL` unset | Lost on process restart |
 | Shared Postgres path | **SHIPPED CODE** + **LOCALLY PROVEN** (optional) | migrations, `pg-store`, apply path | **LIVE/PROD** requires owner TROZLANIO `DATABASE_URL`, migration apply, and DB smoke |
 | Robot UI (`apps/web`) | **SHIPPED CODE** + **LOCALLY PROVEN** | Avatar states; same-origin local proxy | Local demo unauthenticated and loopback-only |
@@ -44,7 +44,7 @@ Never collapse **SHIPPED CODE** or production-config tests into **LIVE / PRODUCT
 | TROZLANIO host page | **SHIPPED CODE** + **HOST-INTEGRATION PROVEN** | `/dashboard/trozbot/robot-concierge`; #3479 | Sibling monorepo |
 | Active authenticated host proxy | **SHIPPED CODE** + **HOST-INTEGRATION PROVEN** | `/api/trozbot` mounted in TROZLANIO `server/routes.ts`; #3480 | Needs reviewed upstream env |
 | Rollout gate + narrow routes | **SHIPPED CODE** + **HOST-INTEGRATION PROVEN** | `isAuthenticated` -> `requireTrozbotAccess`; #3483 | `godfather` is force-allowed by current host policy |
-| Trusted ticket attribution | **SHIPPED CODE** + **HOST-INTEGRATION PROVEN** | host strips forged IDs and injects server context; #3485 | Standalone orchestrator must not be exposed directly to browsers |
+| Trusted ticket attribution | **SHIPPED CODE** + **HOST-INTEGRATION PROVEN** (host strip/inject #3485) + **LOCALLY PROVEN** (orchestrator ignores body IDs #24) | dual boundary: host rewrite + `TrustedToolContext` only | End-to-end durable attribution needs host adapter into `TrustedToolContext`; do not expose orchestrator to browsers |
 | Canonical host/embed tool errors | **SHIPPED CODE** + **LOCALLY PROVEN** | #3489; only `TOOL_NOT_ALLOWED`, `INVALID_INPUT`, `SESSION_NOT_FOUND`, `TOOL_FAILED` | Compatibility proof, not live deployment proof |
 | Production 5xx tool-envelope preservation | **SHIPPED CODE** + **LOCALLY PROVEN** under production middleware stack | #3490; server-only marker + strict bounded envelope | Ordinary/unmarked production 5xx remains generically sanitized |
 | Voice gateway stub | **SHIPPED CODE** + **LOCALLY PROVEN** | `apps/voice-gateway` stub STT/TTS | **NOT** real STT/TTS |
@@ -70,7 +70,7 @@ Never collapse **SHIPPED CODE** or production-config tests into **LIVE / PRODUCT
 | Forwarded paths | `GET /health`, `POST /sessions`, `POST /sessions/<uuid>/tools` |
 | Local-only path | `GET /status` |
 | Upstream | origin-root only; non-loopback requires explicit allow |
-| Ticket identity | server-derived tenant/user and path-derived session |
+| Ticket identity | host rewrites body; orchestrator accepts only `TrustedToolContext` (adapter TBD for durable IDs) |
 | Tool errors | canonical four-code embed schema; bounded production 5xx preservation |
 | UI | no interactive mount when denied or disabled |
 

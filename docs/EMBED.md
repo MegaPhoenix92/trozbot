@@ -85,15 +85,14 @@ The host upstream is set only by environment. Non-loopback origins, including Ku
 
 ### Trusted `create_ticket` identity
 
-Through the host proxy:
+Host (TROZLANIO #3485) and standalone orchestrator must **both** cooperate:
 
-- caller `tenantId`, `userId`, and forged `sessionId` are removed;
-- `sessionId` comes from the validated path;
-- tenant and user come from authenticated TROZLANIO server context;
-- missing trusted context fails closed before fetch;
+- **Host proxy:** caller `tenantId`, `userId`, and forged `sessionId` are stripped; server injects authenticated tenant/user into the tool body before upstream fetch.
+- **Standalone orchestrator:** ticket storage reads identity **only** from server-side `TrustedToolContext`, never from tool input body fields (see #24 / #18). Spoofed body IDs are ignored.
+- Until a verified host→orchestrator adapter maps host identity into `TrustedToolContext`, durable tickets may store **no** tenant/user even when the host rewrote the body (fail-closed).
+- Missing host trusted context fails closed before fetch on the host path.
 - `kb_retrieve` does not inherit forged identity fields.
 
-The standalone orchestrator should not be exposed directly to browsers as a substitute for this host trust boundary.
 
 ### Tool error compatibility
 
