@@ -277,13 +277,14 @@ export function mountTrozbot(
  * Prefer same-origin mount; iframe parents must pass allowlist origins.
  */
 export function buildIframePostMessageContract(): {
-  inboundType: "trozbot:setAvatarState";
-  emittedEvents: readonly [];
+  childToParent: string[];
+  parentToChild: string[];
   note: string;
 } {
   return {
-    inboundType: "trozbot:setAvatarState",
-    emittedEvents: [],
-    note: "Phase 1 embed emits callbacks directly; no child-to-parent postMessage events are emitted. Parent-to-child messages require an exact origin allowlist.",
+    parentToChild: ["trozbot:setAvatarState"],
+    /** Planned — not emitted by mount yet; parents should use callbacks. */
+    childToParent: [],
+    note: "Default origin allowlist is loopback only; set allowedOrigins for production host origins. Never use *. Prefer DOM mount + callbacks; child→parent postMessage events are not emitted in Phase 1.",
   };
 }
