@@ -11,7 +11,7 @@
 | **Phase 1 blueprint** | [`docs/PHASE1_BLUEPRINT.md`](./docs/PHASE1_BLUEPRINT.md) |
 | **Production handoff** | [TROZBOT production runbook](https://github.com/MegaPhoenix92/trozlanio/blob/main/docs/TROZBOT_PRODUCTION_RUNBOOK.md) |
 
-> **Cross-repository merge gate for this docs PR:** merge TROZLANIO PR [#3492](https://github.com/MegaPhoenix92/trozlanio/pull/3492) first so the canonical `main`-branch production-runbook link above exists before this PR lands.
+> **Cross-repository dependency:** TROZLANIO PR [#3492](https://github.com/MegaPhoenix92/trozlanio/pull/3492) is merged; the canonical `main`-branch production-runbook link above resolves.
 
 ## Status (honest)
 

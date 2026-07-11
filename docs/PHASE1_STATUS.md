@@ -77,7 +77,8 @@ Never collapse **SHIPPED CODE** or production-config tests into **LIVE / PRODUCT
 Merged host waves: **#3479, #3480, #3483, #3485, #3489, #3490**.
 
 Canonical step-by-step production handoff (TROZLANIO):  
-`https://github.com/MegaPhoenix92/trozlanio/blob/main/docs/TROZBOT_PRODUCTION_RUNBOOK.md`
+[TROZBOT production runbook](https://github.com/MegaPhoenix92/trozlanio/blob/main/docs/TROZBOT_PRODUCTION_RUNBOOK.md)  
+(landed via TROZLANIO [#3492](https://github.com/MegaPhoenix92/trozlanio/pull/3492); merge this standalone docs PR only after that path exists on `main`).
 
 That runbook covers backup/migrations, secrets, image evidence, standalone deploy, host canary-to-production rollout, staged access, authenticated smoke, observability, rollback, and release evidence. Its existence does not mean those owner-operated production steps have already run.
 

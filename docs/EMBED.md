@@ -11,7 +11,7 @@ Mount the Phase 1 **robot concierge** inside a parent application without rewrit
 | Current evidence | [`PHASE1_STATUS.md`](./PHASE1_STATUS.md) |
 | Production handoff | [TROZBOT production runbook](https://github.com/MegaPhoenix92/trozlanio/blob/main/docs/TROZBOT_PRODUCTION_RUNBOOK.md) |
 
-> **Merge-order gate for this docs PR:** TROZLANIO PR [#3492](https://github.com/MegaPhoenix92/trozlanio/pull/3492) must merge first so the canonical `main`-branch runbook link resolves before this PR lands.
+> **Cross-repository dependency:** TROZLANIO PR [#3492](https://github.com/MegaPhoenix92/trozlanio/pull/3492) is merged; the canonical `main`-branch runbook link resolves.
 
 ## Why `packages/embed`
 
