@@ -92,6 +92,7 @@ That runbook covers backup/migrations, secrets, image evidence, standalone deplo
 
 See also:
 
+- [`HANDOFF_CURRENT.md`](./HANDOFF_CURRENT.md) — agent pickup / STOP / next goals
 - [`PHASE1_BLUEPRINT.md`](./PHASE1_BLUEPRINT.md) — mission and planned criteria
 - [`GOAL_LOOP.md`](./GOAL_LOOP.md) — how issue/build/review/merge/STOP work
 - [`EMBED.md`](./EMBED.md) — host contract
