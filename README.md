@@ -17,7 +17,7 @@
 
 **Phase 1 code spine shipped** — local vertical slice, embed package, thin K8s manifests, supply-chain CI path, and hardened TROZLANIO host integration.
 
-The host path now includes active bootstrap registration, rollout gating, trusted ticket identity, canonical embed error codes, and production-middleware compatibility tests through TROZLANIO PRs #3479, #3480, #3483, #3485, #3489, and #3490.
+The host path now includes active bootstrap registration, rollout gating, host-side ticket identity rewrite (#3485), canonical embed error codes, and production-middleware compatibility tests through TROZLANIO PRs #3479, #3480, #3483, #3485, #3489, and #3490. Standalone orchestrator ticket IDs come only from server `TrustedToolContext` (see #24); host body rewrite alone does not populate durable identity until an adapter is wired.
 
 **Production execution still has explicit owner-operated gates:** real STT/TTS, live standalone cluster apply, production shared-DB migration/smoke, immutable registry push, cosign signing, admission verification, and rollout-cohort approval. See the evidence ledger and production handoff.
 

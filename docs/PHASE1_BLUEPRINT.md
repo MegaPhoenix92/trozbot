@@ -157,7 +157,7 @@ A real user session can:
 1. Open the robot concierge (non-human avatar) — **local + host UI shipped**
 2. Speak a software support issue — **stub voice only**; real STT **not shipped**
 3. Receive a **helpful answer grounded in the knowledge base** — **local proven** (fixture KB)
-4. Create a **support ticket** if needed — **local + host-attribution proven**
+4. Create a **support ticket** if needed — **local proven**; host body rewrite proven; durable tenant/user requires host→`TrustedToolContext` adapter (not only body inject)
 5. Complete 1–4 in a **single continuous session** — **local text path proven**; full voice E2E production **not**
 6. Run the slice on the **K8s cluster** with health checks + logging — **manifests shipped**; **live apply owner-blocked**
 7. Pass the **security baseline** on images used in that deploy — **CI scans/SBOM shipped**; **sign + admission owner-blocked**
